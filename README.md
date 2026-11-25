@@ -20,6 +20,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/egeaksun/lodestone/releases/latest"><b>Download</b></a> ·
+  <a href="docs/Lodestone-Guide.pdf"><b>Quick-start guide (PDF)</b></a> — every feature and shortcut on six pages ·
+  <a href="#command-line"><b>CLI</b></a>
+</p>
+
+<p align="center">
   <img src="docs/images/clipboard-history.png" width="400" alt="Clipboard history panel">
   &nbsp;
   <img src="docs/images/convert-panel.png" width="440" alt="Convert panel">
@@ -92,6 +98,11 @@ MD5/SHA-1/SHA-256. Every transform can have its own shortcut.
 </p>
 
 ## Default shortcuts
+
+> [!TIP]
+> Want everything on paper? The **[Lodestone guide (PDF)](docs/Lodestone-Guide.pdf)** has every feature and every
+> shortcut on six printable pages: a cheat sheet of the essentials, all 25 snapping shortcuts, the clipboard panel
+> keys, file actions, the converter's formats and presets, and a CLI reference.
 
 | Action | Keys |
 | --- | --- |
@@ -240,6 +251,7 @@ dragged event. Lodestone avoids both:
 swift build
 swift test                          # or: make test
 make zip ARCHS="arm64 x86_64"       # universal build/Lodestone.zip, as released
+make guide                          # regenerate docs/Lodestone-Guide.pdf (needs the app and Chrome)
 ```
 
 Releases are built by GitHub Actions: push a `v*` tag whose version matches `Resources/Info.plist`, the CLI and

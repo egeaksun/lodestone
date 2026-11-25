@@ -56,6 +56,7 @@ jobs:
           4. Optional: Settings → General → Command-line tool → **Install** adds the `lodestone` command.
 
           Optional tools for more formats: `brew install ffmpeg webp libavif ghostscript`.
+          New here? **Lodestone-Guide.pdf** below has every feature and shortcut on six pages.
           EOF
           cat notes.md
 
@@ -63,5 +64,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" build/Lodestone.zip build/Lodestone.zip.sha256 \
+          gh release create "$GITHUB_REF_NAME" build/Lodestone.zip build/Lodestone.zip.sha256 docs/Lodestone-Guide.pdf \
             --title "Lodestone $VERSION" --notes-file notes.md --verify-tag

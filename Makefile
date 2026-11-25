@@ -7,7 +7,7 @@ SIGN_ID ?= -
 ARCHS ?=
 SWIFT_RELEASE := swift build -c release $(foreach a,$(ARCHS),--arch $(a))
 
-.PHONY: all app zip icons install test clean
+.PHONY: all app zip guide icons install test clean
 
 all: app
 
@@ -26,6 +26,14 @@ app:
 # build/Lodestone.zip for a GitHub release (ditto keeps the bundle's symlinks and signature intact).
 zip: app
 	ditto -c -k --sequesterRsrc --keepParent $(BUNDLE) build/$(APP).zip
+
+# Regenerates docs/Lodestone-Guide.pdf from the running app's default shortcuts (needs Google Chrome).
+CHROME ?= /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+guide:
+	mkdir -p build
+	lodestone shortcuts list --json > build/shortcuts.json
+	python3 scripts/build-guide.py build/shortcuts.json build/guide.html
+	"$(CHROME)" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf=docs/Lodestone-Guide.pdf "file://$(CURDIR)/build/guide.html"
 
 # Regenerates the icon SVGs and renders them. The outputs are committed, so plain builds don't need this.
 icons:
