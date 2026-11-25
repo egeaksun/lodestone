@@ -239,8 +239,13 @@ private final class RulesList: NSStackView, NSTableViewDataSource, NSTableViewDe
 
 /// A compact editor for one rule, shown as an alert with a form.
 @MainActor
-private enum RuleEditor {
+enum RuleEditor {
     static func run(_ rule: FolderRule, isNew: Bool, window: NSWindow?) -> FolderRule? {
+        run(rule, isNew: isNew, present: { $0.runModal() })
+    }
+
+    /// `present` shows the alert and returns the response (offscreen renders lay it out instead).
+    static func run(_ rule: FolderRule, isNew: Bool, present: (NSAlert) -> NSApplication.ModalResponse) -> FolderRule? {
         var rule = rule
         // An automatic name stays automatic (empty field), so it follows a change of folder or format.
         let name = NSTextField(string: rule.name == rule.defaultName ? "" : rule.name)
@@ -355,7 +360,7 @@ private enum RuleEditor {
         alert.addButton(withTitle: isNew ? "Add Rule" : "Save")
         alert.addButton(withTitle: "Cancel")
         // Keep the closure targets alive while the alert runs.
-        let response = withExtendedLifetime([refresh, outputTarget, chooseFolder]) { alert.runModal() }
+        let response = withExtendedLifetime([refresh, outputTarget, chooseFolder]) { present(alert) }
         guard response == .alertFirstButtonReturn else { return nil }
 
         rule.includeSubfolders = subfolders.state == .on
