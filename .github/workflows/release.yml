@@ -1,0 +1,67 @@
+name: Release
+
+# Push a tag like v0.3.0 to build a universal Lodestone.app and publish it as a GitHub release.
+# The tag must match the version in Resources/Info.plist and the CLI, and CHANGELOG.md must have a
+# "## [x.y.z]" section, which becomes the release notes.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the version
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          plist=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)
+          if [ "$version" != "$plist" ]; then echo "::error::Tag $version doesn't match Info.plist $plist"; exit 1; fi
+          if ! grep -q "version: \"$version\"" Sources/LodestoneCLI/Lodestone.swift; then
+            echo "::error::Tag $version doesn't match the CLI version in Sources/LodestoneCLI/Lodestone.swift"; exit 1
+          fi
+          if ! grep -q "^## \[$version\]" CHANGELOG.md; then echo "::error::CHANGELOG.md has no section for $version"; exit 1; fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Test
+        run: swift test
+
+      - name: Build universal app
+        run: make zip ARCHS="arm64 x86_64"
+
+      - name: Checksum
+        run: cd build && shasum -a 256 Lodestone.zip > Lodestone.zip.sha256 && cat Lodestone.zip.sha256
+
+      - name: Release notes
+        run: |
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          cat >> notes.md <<'EOF'
+
+          ### Install
+
+          1. Download **Lodestone.zip** below, unzip it and move **Lodestone.app** to Applications.
+          2. The app isn't notarized, so the first time, right-click it and choose **Open**, then **Open** again.
+             (Or run `xattr -dr com.apple.quarantine /Applications/Lodestone.app`.)
+          3. Grant **Accessibility** and, for Copy Text from Screen, **Screen Recording** in System Settings →
+             Privacy & Security.
+          4. Optional: Settings → General → Command-line tool → **Install** adds the `lodestone` command.
+
+          Optional tools for more formats: `brew install ffmpeg webp libavif ghostscript`.
+          EOF
+          cat notes.md
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" build/Lodestone.zip build/Lodestone.zip.sha256 \
+            --title "Lodestone $VERSION" --notes-file notes.md --verify-tag

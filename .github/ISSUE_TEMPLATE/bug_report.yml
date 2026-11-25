@@ -1,0 +1,41 @@
+name: Bug report
+description: Something doesn't work as described.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Drop two PDFs on the drop shelf
+        2. Choose Merge PDFs
+        3. …
+  - type: input
+    id: version
+    attributes:
+      label: Lodestone version
+      description: "`lodestone --version`, or the release you downloaded."
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and Mac
+      placeholder: macOS 15.1, Apple silicon
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Activity log
+      description: |
+        Output of `lodestone logs --since 1h --level warn` around the problem. The log never holds clipboard,
+        screen or file contents, but it does hold file paths: remove any you'd rather not share.
+      render: text

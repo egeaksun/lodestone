@@ -11,6 +11,8 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/egeaksun/lodestone/releases/latest"><img src="https://img.shields.io/github/v/release/egeaksun/lodestone?label=download" alt="Latest release"></a>
+  <a href="https://github.com/egeaksun/lodestone/actions/workflows/ci.yml"><img src="https://github.com/egeaksun/lodestone/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple" alt="macOS 14+">
   <img src="https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white" alt="Swift 6">
   <img src="https://img.shields.io/badge/AppKit-native-0A84FF" alt="Native AppKit">
@@ -136,6 +138,16 @@ shortcut and press the new combination. A shortcut shown in red is already taken
 
 ## Install
 
+### Download
+
+1. Download **Lodestone.zip** from the [latest release](https://github.com/egeaksun/lodestone/releases/latest)
+   (universal: Apple silicon and Intel, macOS 14 or later), unzip it and move **Lodestone.app** to Applications.
+2. The app isn't notarized yet, so the first time, right-click it and choose **Open**, then **Open** again.
+   Or run `xattr -dr com.apple.quarantine /Applications/Lodestone.app`.
+3. For the `lodestone` command: Settings → General → Command-line tool → **Install**.
+
+### Build from source
+
 Requirements: macOS 14 Sonoma or later, and Xcode 16 or a Swift 6 toolchain.
 
 ```sh
@@ -144,7 +156,9 @@ cd lodestone
 make install   # builds, copies to /Applications, links ~/.local/bin/lodestone, launches
 ```
 
-Then, in **System Settings → Privacy & Security**, turn on Lodestone under:
+### Permissions
+
+In **System Settings → Privacy & Security**, turn on Lodestone under:
 
 - **Accessibility** for window snapping, and for pasting from clipboard history and Paste as Plain Text.
 - **Screen & System Audio Recording** for Copy Text from Screen. Quit and reopen Lodestone afterwards.
@@ -159,8 +173,8 @@ brew install ffmpeg webp libavif ghostscript
 ```
 
 > [!NOTE]
-> The build is signed ad hoc, so macOS treats every rebuild as a new app and forgets its permissions. Turn
-> Lodestone on again after each `make install`, or sign with a stable certificate:
+> Builds are signed ad hoc, so macOS treats every new version or rebuild as a new app and forgets its
+> permissions. Turn Lodestone on again after updating, or build with a stable certificate:
 > `make install SIGN_ID="Apple Development: …"`.
 
 ## Command line
@@ -224,8 +238,12 @@ dragged event. Lodestone avoids both:
 
 ```sh
 swift build
-swift test   # or: make test
+swift test                          # or: make test
+make zip ARCHS="arm64 x86_64"       # universal build/Lodestone.zip, as released
 ```
+
+Releases are built by GitHub Actions: push a `v*` tag whose version matches `Resources/Info.plist`, the CLI and
+a `CHANGELOG.md` section. See [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

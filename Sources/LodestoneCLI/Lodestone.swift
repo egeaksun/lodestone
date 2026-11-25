@@ -13,7 +13,7 @@ struct LodestoneCommand: AsyncParsableCommand {
         Discover everything with `lodestone methods` (raw IPC methods) and `lodestone commands`
         (shortcut-able actions). Activity is logged for 7 days: `lodestone logs`.
         """,
-        version: "0.2.0",
+        version: "0.3.0",
         subcommands: [
             Status.self,
             WindowGroup.self,

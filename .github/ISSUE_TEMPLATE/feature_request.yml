@@ -1,0 +1,21 @@
+name: Feature request
+description: A utility macOS is missing, or a better way to do something Lodestone already does.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The task, and what's awkward about it today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help
+      description: How you'd like it to work. Shortcuts, menu items, CLI commands, settings.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you use now
+      description: Other apps or workarounds, if any.

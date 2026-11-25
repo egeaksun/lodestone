@@ -3,22 +3,29 @@ BUNDLE := build/$(APP).app
 # Ad-hoc by default. Pass SIGN_ID="Your Identity" to sign with a real certificate, which keeps the
 # Accessibility grant across rebuilds (an ad-hoc signature changes with every build).
 SIGN_ID ?= -
+# Pass ARCHS="arm64 x86_64" for a universal build (the release workflow does).
+ARCHS ?=
+SWIFT_RELEASE := swift build -c release $(foreach a,$(ARCHS),--arch $(a))
 
-.PHONY: all app icons install test clean
+.PHONY: all app zip icons install test clean
 
 all: app
 
 app:
-	swift build -c release --product $(APP)
-	swift build -c release --product lodestone-cli
+	$(SWIFT_RELEASE) --product $(APP)
+	$(SWIFT_RELEASE) --product lodestone-cli
 	rm -rf $(BUNDLE)
 	mkdir -p $(BUNDLE)/Contents/MacOS $(BUNDLE)/Contents/Resources $(BUNDLE)/Contents/Helpers
-	cp "$$(swift build -c release --show-bin-path)/$(APP)" $(BUNDLE)/Contents/MacOS/$(APP)
-	cp "$$(swift build -c release --show-bin-path)/lodestone-cli" $(BUNDLE)/Contents/Helpers/lodestone
+	cp "$$($(SWIFT_RELEASE) --show-bin-path)/$(APP)" $(BUNDLE)/Contents/MacOS/$(APP)
+	cp "$$($(SWIFT_RELEASE) --show-bin-path)/lodestone-cli" $(BUNDLE)/Contents/Helpers/lodestone
 	cp Resources/Info.plist $(BUNDLE)/Contents/Info.plist
 	cp Resources/AppIcon.icns Resources/MenuBarIcon.png Resources/MenuBarIcon@2x.png $(BUNDLE)/Contents/Resources/
 	codesign --force --sign "$(SIGN_ID)" --identifier app.lodestone.cli $(BUNDLE)/Contents/Helpers/lodestone
 	codesign --force --sign "$(SIGN_ID)" $(BUNDLE)
+
+# build/Lodestone.zip for a GitHub release (ditto keeps the bundle's symlinks and signature intact).
+zip: app
+	ditto -c -k --sequesterRsrc --keepParent $(BUNDLE) build/$(APP).zip
 
 # Regenerates the icon SVGs and renders them. The outputs are committed, so plain builds don't need this.
 icons:
