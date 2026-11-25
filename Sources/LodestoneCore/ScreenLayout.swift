@@ -71,6 +71,23 @@ public struct ScreenLayout: Equatable, Sendable {
         return best
     }
 
+    /// Screen indices in physical left-to-right order (top to bottom for screens stacked in a column).
+    public var leftToRight: [Int] {
+        screens.indices.sorted {
+            let a = screens[$0].frame, b = screens[$1].frame
+            return a.midX != b.midX ? a.midX < b.midX : a.midY > b.midY
+        }
+    }
+
+    /// The screen next to `index` in physical order, wrapping around at either end.
+    /// - Parameter direction: -1 for leftward; anything else moves rightward.
+    public func adjacentScreen(to index: Int, direction: Int) -> Int {
+        let order = leftToRight
+        guard order.count > 1, let position = order.firstIndex(of: index) else { return index }
+        let step = direction < 0 ? order.count - 1 : 1
+        return order[(position + step) % order.count]
+    }
+
     /// Moves `rect` from one visible area to another, keeping its proportional position and size.
     public static func map(_ rect: CGRect, from a: CGRect, to b: CGRect) -> CGRect {
         let sx = b.width / a.width

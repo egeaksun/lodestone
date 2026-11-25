@@ -8,6 +8,7 @@ protocol SettingsHost: AnyObject {
     /// Actions whose shortcut another app already owns.
     var unavailableShortcuts: Set<SnapAction> { get }
     var dragEnabled: Bool { get set }
+    var cycleDisplays: Bool { get set }
     func shortcutsChanged()
     func setShortcutsSuspended(_ suspended: Bool)
 }
@@ -17,6 +18,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     private weak var host: SettingsHost?
     private var recorders: [SnapAction: ShortcutRecorder] = [:]
     private var dragCheckbox: NSButton!
+    private var cycleCheckbox: NSButton!
     private var loginCheckbox: NSButton!
     private var accessibilityLabel: NSTextField!
     private var accessibilityButton: NSButton!
@@ -71,6 +73,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
             recorder.isUnavailable = host.unavailableShortcuts.contains(action)
         }
         dragCheckbox.state = host.dragEnabled ? .on : .off
+        cycleCheckbox.state = host.cycleDisplays ? .on : .off
         loginCheckbox.state = SMAppService.mainApp.status == .enabled ? .on : .off
         let trusted = AXIsProcessTrusted()
         accessibilityLabel.stringValue = trusted ? "Accessibility access is granted." : "Lodestone needs Accessibility access to move windows."
@@ -90,6 +93,10 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
 
     private func generalTab() -> NSTabViewItem {
         dragCheckbox = NSButton(checkboxWithTitle: "Snap windows by dragging them to screen edges", target: self, action: #selector(toggleDrag))
+        cycleCheckbox = NSButton(checkboxWithTitle: "Press a shortcut again to move the window to the next display", target: self, action: #selector(toggleCycle))
+        let cycleHint = NSTextField(wrappingLabelWithString: "Left-side positions move left, right-side and centered positions move right, wrapping around at the last display.")
+        cycleHint.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        cycleHint.textColor = .secondaryLabelColor
         loginCheckbox = NSButton(checkboxWithTitle: "Launch Lodestone at login", target: self, action: #selector(toggleLogin))
         accessibilityLabel = NSTextField(wrappingLabelWithString: "")
         accessibilityLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
@@ -99,10 +106,12 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         hint.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         hint.textColor = .secondaryLabelColor
 
-        let stack = NSStackView(views: [dragCheckbox, loginCheckbox, separator(), accessibilityLabel, accessibilityButton, separator(), hint])
+        let stack = NSStackView(views: [dragCheckbox, cycleCheckbox, cycleHint, loginCheckbox, separator(), accessibilityLabel, accessibilityButton, separator(), hint])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 12
+        stack.setCustomSpacing(4, after: cycleCheckbox)
+        cycleHint.leadingAnchor.constraint(equalTo: stack.leadingAnchor, constant: 20).isActive = true
         return tab("General", symbol: "gearshape", content: stack)
     }
 
@@ -168,6 +177,10 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
 
     @objc private func toggleDrag() {
         host?.dragEnabled = dragCheckbox.state == .on
+    }
+
+    @objc private func toggleCycle() {
+        host?.cycleDisplays = cycleCheckbox.state == .on
     }
 
     @objc private func toggleLogin() {

@@ -50,6 +50,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, Settin
         }
     }
 
+    private let cycleKey = "cycleDisplays"
+    var cycleDisplays: Bool {
+        get { UserDefaults.standard.object(forKey: cycleKey) as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: cycleKey) }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         AX.configure()
         buildMainMenu()
@@ -133,7 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, Settin
         // Refresh on each command: visibleFrame changes when the Dock is moved or resized.
         let layout = currentLayout()
         drag.layout = layout
-        windows.perform(action, pid: pid, layout: layout)
+        windows.perform(action, pid: pid, layout: layout, cycleDisplays: cycleDisplays)
     }
 
     // MARK: Menu

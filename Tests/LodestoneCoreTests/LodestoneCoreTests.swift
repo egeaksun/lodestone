@@ -80,6 +80,18 @@ final class SnapActionTests: XCTestCase {
         XCTAssertEqual(huge, v)
     }
 
+    func testHorizontalDirection() {
+        for a in [SnapAction.leftHalf, .topLeft, .bottomLeft, .firstThird, .firstTwoThirds, .sixth1, .sixth3] {
+            XCTAssertEqual(a.horizontalDirection, -1, a.rawValue)
+        }
+        for a in [SnapAction.rightHalf, .topRight, .bottomRight, .lastThird, .lastTwoThirds, .sixth4, .sixth6] {
+            XCTAssertEqual(a.horizontalDirection, 1, a.rawValue)
+        }
+        for a in [SnapAction.maximize, .center, .topHalf, .bottomHalf, .centerThird, .centerTwoThirds, .restore] {
+            XCTAssertEqual(a.horizontalDirection, 0, a.rawValue)
+        }
+    }
+
     func testNonRegionActions() {
         XCTAssertNil(SnapAction.restore.frame(in: v, window: window))
         XCTAssertNil(SnapAction.nextDisplay.frame(in: v, window: window))
@@ -163,6 +175,27 @@ final class ScreenLayoutTests: XCTestCase {
         XCTAssertEqual(layout.screenIndex(bestFor: CGRect(x: 1400, y: 0, width: 400, height: 300)), 1)
         XCTAssertEqual(layout.screenIndex(bestFor: CGRect(x: 1200, y: 0, width: 400, height: 300)), 0)
         XCTAssertEqual(layout.screenIndex(bestFor: CGRect(x: 9000, y: 0, width: 10, height: 10)), 1)
+    }
+
+    func testLeftToRightOrderIgnoresNSScreenOrder() {
+        // Primary (menu bar) screen in the middle, others listed in arbitrary order.
+        let three = ScreenLayout(screens: [
+            Screen(frame: CGRect(x: 0, y: 0, width: 1920, height: 1080), visibleFrame: CGRect(x: 0, y: 0, width: 1920, height: 1050)),
+            Screen(frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080), visibleFrame: CGRect(x: 1920, y: 0, width: 1920, height: 1080)),
+            Screen(frame: CGRect(x: -1920, y: 0, width: 1920, height: 1080), visibleFrame: CGRect(x: -1920, y: 0, width: 1920, height: 1080)),
+        ])
+        XCTAssertEqual(three.leftToRight, [2, 0, 1])
+        XCTAssertEqual(three.adjacentScreen(to: 2, direction: 1), 0)
+        XCTAssertEqual(three.adjacentScreen(to: 0, direction: 1), 1)
+        XCTAssertEqual(three.adjacentScreen(to: 1, direction: 1), 2)
+        XCTAssertEqual(three.adjacentScreen(to: 0, direction: -1), 2)
+        XCTAssertEqual(three.adjacentScreen(to: 2, direction: -1), 1)
+        XCTAssertEqual(three.adjacentScreen(to: 0, direction: 0), 1)
+    }
+
+    func testAdjacentScreenWithOneScreen() {
+        let one = ScreenLayout(screens: [layout.screens[0]])
+        XCTAssertEqual(one.adjacentScreen(to: 0, direction: 1), 0)
     }
 
     func testMapKeepsProportions() {

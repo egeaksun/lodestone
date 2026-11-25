@@ -38,6 +38,16 @@ public enum SnapAction: String, CaseIterable, Sendable {
         }
     }
 
+    /// Which way a repeated press carries the window across displays: -1 for actions on the left side of
+    /// the screen, +1 for the right side, 0 for centered actions (which also step rightward).
+    public var horizontalDirection: Int {
+        let unit = CGRect(x: 0, y: 0, width: 1200, height: 800)
+        guard let r = frame(in: unit, window: CGRect(x: 0, y: 0, width: 600, height: 400)) else { return 0 }
+        if r.midX < unit.midX - 1 { return -1 }
+        if r.midX > unit.midX + 1 { return 1 }
+        return 0
+    }
+
     /// Target frame inside `visible` (Cocoa coordinates). Nil for actions that do not target a fixed region.
     /// Thirds and sixths run left-to-right on landscape screens and top-to-bottom on portrait screens.
     public func frame(in v: CGRect, window: CGRect) -> CGRect? {

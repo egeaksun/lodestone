@@ -44,6 +44,23 @@ Taken from the Magnet configuration this replaces (Magnet's defaults plus sixths
 | Restore | ⌃⌥ ⌫ |
 | Next / Previous display | ⌃⌥⌘ → ← |
 
+## Moving across displays
+
+Press a shortcut again on a window that is already in that position, and the window moves to the same
+position on the next display. For example, ⌃⌥T puts a window on the right two thirds of the left
+monitor; pressing it again moves it to the right two thirds of the center monitor.
+
+- Displays are ordered by where they physically sit, left to right, not by macOS's internal order.
+- Left-side positions (left half, left third, sixths 1–3, …) move left. Right-side positions move
+  right. Centered positions (maximize, center, center third, …) move right. It wraps around at the
+  last display.
+- A repeat is detected both from the last action Lodestone applied to the window and from the window's
+  frame, so it also works for windows snapped by dragging, or apps that adjust the requested size.
+- Restore still returns the window to its size and place from before the first snap.
+- ⌃⌥⌘ → / ← move a window to the display on the right or left, keeping its relative position.
+
+Turn it off in Settings → General.
+
 ## Drag to snap
 
 Drag a window by its title bar to a screen edge. The zones follow Magnet's default layout: the screen

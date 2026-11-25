@@ -109,6 +109,12 @@ extension CGSize {
     }
 }
 
+extension CGRect {
+    func isClose(to o: CGRect, tolerance: CGFloat = 2) -> Bool {
+        origin.isClose(to: o.origin, tolerance: tolerance) && size.isClose(to: o.size, tolerance: tolerance)
+    }
+}
+
 extension CGPoint {
     func isClose(to o: CGPoint, tolerance: CGFloat = 1) -> Bool {
         abs(x - o.x) <= tolerance && abs(y - o.y) <= tolerance
