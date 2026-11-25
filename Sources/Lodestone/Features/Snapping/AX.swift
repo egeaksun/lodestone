@@ -82,6 +82,32 @@ enum AX {
         }
     }
 
+    /// Standard windows of an app, front to back.
+    static func windows(pid: pid_t) -> [AXUIElement] {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(AXUIElementCreateApplication(pid), kAXWindowsAttribute as CFString, &value) == .success,
+              let array = value as? [AXUIElement] else { return [] }
+        return array.filter { string($0, kAXSubroleAttribute) == kAXStandardWindowSubrole as String }
+    }
+
+    /// The window server's number for a window (stable for the window's lifetime).
+    static func windowID(_ window: AXUIElement) -> UInt32? {
+        var id: CGWindowID = 0
+        return _AXUIElementGetWindow(window, &id) == .success && id != 0 ? id : nil
+    }
+
+    static func string(_ element: AXUIElement, _ attribute: String) -> String? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success else { return nil }
+        return value as? String
+    }
+
+    static func bool(_ element: AXUIElement, _ attribute: String) -> Bool? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success else { return nil }
+        return value as? Bool
+    }
+
     static func pid(of element: AXUIElement) -> pid_t {
         var pid: pid_t = 0
         AXUIElementGetPid(element, &pid)
@@ -95,6 +121,10 @@ enum AX {
         return (value as! AXUIElement)
     }
 }
+
+/// Private but long-stable API (used by every window manager) mapping an AX window to its CGWindowID.
+@_silgen_name("_AXUIElementGetWindow")
+private func _AXUIElementGetWindow(_ element: AXUIElement, _ id: UnsafeMutablePointer<CGWindowID>) -> AXError
 
 /// Hashable identity for an AX window, using CoreFoundation equality (two references to one window compare equal).
 struct WindowKey: Hashable {

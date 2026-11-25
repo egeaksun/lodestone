@@ -11,44 +11,54 @@ public struct KeyCombo: Codable, Hashable, Sendable {
     }
 }
 
-/// The shortcut for each action: built-in defaults plus the user's changes, saved in UserDefaults.
-/// Only changes are stored, so actions added in later versions pick up their defaults.
+/// The shortcut for each command: built-in defaults plus the user's changes, saved in UserDefaults.
+/// Only changes are stored, so commands added in later versions pick up their defaults.
+///
+/// Commands are identified by string IDs. Snap actions use their raw value (for example "leftHalf"),
+/// other features use "<feature>.<command>" (for example "clipboard.history").
 public final class ShortcutStore {
-    public let defaults: [SnapAction: KeyCombo]
+    public private(set) var defaults: [String: KeyCombo]
+    /// Every known command ID, in registration order. Used for conflict checks.
+    public private(set) var ids: [String]
     private let storage: UserDefaults
     private let storageKey = "shortcuts"
     /// A nil value means the user cleared that shortcut.
-    private var overrides: [SnapAction: KeyCombo?] = [:]
+    private var overrides: [String: KeyCombo?] = [:]
 
-    public init(defaults: [SnapAction: KeyCombo], storage: UserDefaults = .standard) {
+    public init(defaults: [String: KeyCombo] = [:], ids: [String]? = nil, storage: UserDefaults = .standard) {
         self.defaults = defaults
+        self.ids = ids ?? defaults.keys.sorted()
         self.storage = storage
         if let data = storage.data(forKey: storageKey),
            let saved = try? JSONDecoder().decode([String: KeyCombo?].self, from: data) {
-            for (raw, combo) in saved {
-                if let action = SnapAction(rawValue: raw) { overrides.updateValue(combo, forKey: action) }
-            }
+            for (id, combo) in saved { overrides.updateValue(combo, forKey: id) }
         }
     }
 
-    public func combo(for action: SnapAction) -> KeyCombo? {
-        if let override = overrides[action] { return override }
-        return defaults[action]
+    /// Adds a command and its default shortcut (nil for none). Registering an ID again replaces its default.
+    public func register(_ id: String, default combo: KeyCombo?) {
+        if !ids.contains(id) { ids.append(id) }
+        defaults[id] = combo
     }
 
-    public func action(for combo: KeyCombo) -> SnapAction? {
-        SnapAction.allCases.first { self.combo(for: $0) == combo }
+    public func combo(for id: String) -> KeyCombo? {
+        if let override = overrides[id] { return override }
+        return defaults[id]
     }
 
-    /// Assigns `combo` to `action`, or clears it when nil. Any other action using the same combination
-    /// loses it, so one key combination never triggers two actions.
-    public func set(_ combo: KeyCombo?, for action: SnapAction) {
+    public func id(for combo: KeyCombo) -> String? {
+        ids.first { self.combo(for: $0) == combo }
+    }
+
+    /// Assigns `combo` to `id`, or clears it when nil. Any other command using the same combination
+    /// loses it, so one key combination never triggers two commands.
+    public func set(_ combo: KeyCombo?, for id: String) {
         if let combo {
-            for other in SnapAction.allCases where other != action && self.combo(for: other) == combo {
+            for other in ids where other != id && self.combo(for: other) == combo {
                 assign(nil, to: other)
             }
         }
-        assign(combo, to: action)
+        assign(combo, to: id)
         save()
     }
 
@@ -57,11 +67,11 @@ public final class ShortcutStore {
         save()
     }
 
-    private func assign(_ combo: KeyCombo?, to action: SnapAction) {
-        if combo == defaults[action] {
-            overrides.removeValue(forKey: action)
+    private func assign(_ combo: KeyCombo?, to id: String) {
+        if combo == defaults[id] {
+            overrides.removeValue(forKey: id)
         } else {
-            overrides.updateValue(combo, forKey: action)
+            overrides.updateValue(combo, forKey: id)
         }
     }
 
@@ -70,7 +80,11 @@ public final class ShortcutStore {
             storage.removeObject(forKey: storageKey)
             return
         }
-        let raw = Dictionary(uniqueKeysWithValues: overrides.map { ($0.key.rawValue, $0.value) })
-        if let data = try? JSONEncoder().encode(raw) { storage.set(data, forKey: storageKey) }
+        if let data = try? JSONEncoder().encode(overrides) { storage.set(data, forKey: storageKey) }
     }
+}
+
+public extension ShortcutStore {
+    func combo(for action: SnapAction) -> KeyCombo? { combo(for: action.rawValue) }
+    func set(_ combo: KeyCombo?, for action: SnapAction) { set(combo, for: action.rawValue) }
 }
