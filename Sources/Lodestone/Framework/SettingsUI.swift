@@ -25,6 +25,14 @@ enum SettingsUI {
         BoundSlider(context: context, key: key, format: format)
     }
 
+    /// A text field for a string setting. Stores the value when editing ends (Return or leaving the field).
+    static func textField(_ context: AppContext, _ key: String, placeholder: String = "", width: CGFloat = 180) -> NSTextField {
+        let field = BoundTextField(context: context, key: key)
+        field.placeholderString = placeholder
+        field.widthAnchor.constraint(equalToConstant: width).isActive = true
+        return field
+    }
+
     /// A push button that runs a closure.
     static func button(_ title: String, action: @escaping @MainActor () -> Void) -> NSButton {
         let target = ClosureTarget(action)
@@ -110,6 +118,38 @@ private final class BoundCheckbox: NSButton {
 
     @objc private func changed() {
         try? context.settings.set(key, .bool(state == .on))
+    }
+}
+
+private final class BoundTextField: NSTextField, NSTextFieldDelegate {
+    private let context: AppContext
+    private let key: String
+    private var observer: NSObjectProtocol?
+
+    init(context: AppContext, key: String) {
+        self.context = context
+        self.key = key
+        super.init(frame: .zero)
+        delegate = self
+        refresh()
+        observer = NotificationCenter.default.addObserver(forName: .lodestoneSettingChanged, object: nil, queue: .main) { [weak self] n in
+            MainActor.assumeIsolated {
+                if n.userInfo?["key"] as? String == self?.key { self?.refresh() }
+            }
+        }
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    private func refresh() {
+        if currentEditor() == nil { stringValue = context.settings.string(key) }
+    }
+
+    func controlTextDidEndEditing(_ obj: Notification) {
+        let value = stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard value != context.settings.string(key) else { return }
+        try? context.settings.set(key, .string(value))
     }
 }
 
