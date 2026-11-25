@@ -1,37 +1,66 @@
 # Lodestone
 
-A menu bar window snapper for macOS, written to cost nothing while windows are being moved.
+A macOS menu bar utility: window snapping, plus file conversion, clipboard and screen tools that
+macOS is missing. Everything it does is also a `lodestone` command, with `--json` output for scripts
+and agents. Features cost nothing while idle.
 
 ## Install
 
 ```sh
-make install   # builds, copies to /Applications, launches
+make install   # builds, copies to /Applications, links ~/.local/bin/lodestone, launches
 ```
 
-On first launch, grant Accessibility access (System Settings → Privacy & Security → Accessibility).
-Quit Magnet first: both apps register the same shortcuts.
+Then grant, in System Settings → Privacy & Security:
 
-The build is ad-hoc signed, so macOS treats every rebuild as a new app and the Accessibility grant
-has to be removed and re-added after `make install`. To avoid that, sign with a stable certificate:
-`make install SIGN_ID="Apple Development: …"`.
+- **Accessibility**: window snapping, and pasting from clipboard history and Paste as Plain Text.
+- **Screen & System Audio Recording**: Copy Text from Screen. Quit and reopen Lodestone after
+  turning it on.
 
-## Using it
+Quit Magnet first: both apps register the same snapping shortcuts.
+
+The build is ad-hoc signed, so macOS treats every rebuild as a new app: after `make install`, remove
+and re-add Lodestone under Accessibility (and Screen Recording). To avoid that, sign with a stable
+certificate: `make install SIGN_ID="Apple Development: …"`.
+
+Optional tools for more formats: `brew install ffmpeg webp libavif ghostscript` (video and audio,
+WebP, AVIF, stronger PDF compression). Lodestone works without them and says which one to install
+when it needs it.
+
+## Features
+
+| Feature | What it does | Docs |
+| --- | --- | --- |
+| Window snapping | Shortcuts and drag-to-edge snapping, repeat a shortcut to move across displays | below |
+| Converter | Images, video and audio with HandBrake-style presets; resize, compress, strip metadata and location | [docs/converter.md](docs/converter.md) |
+| Folder rules | Convert new files in a folder automatically, e.g. screen recordings → MP4 | [docs/rules.md](docs/rules.md) |
+| PDF tools | Merge, compress, images → PDF, extract/split, rotate, PDF → images, OCR | [docs/pdf-and-image-tools.md](docs/pdf-and-image-tools.md) |
+| Background removal | Cut out an image's subject into a transparent PNG | [docs/pdf-and-image-tools.md](docs/pdf-and-image-tools.md) |
+| Clipboard history | Searchable, pinned items, skips passwords; Paste as Plain Text | [docs/clipboard.md](docs/clipboard.md) |
+| Copy text from screen | Select a region, get its text or QR code on the clipboard | [docs/screen-and-text.md](docs/screen-and-text.md) |
+| Color picker | Pick a screen color as hex, rgb(), hsl(), SwiftUI, NSColor or UIColor | [docs/screen-and-text.md](docs/screen-and-text.md) |
+| Clipboard transforms | JSON, Base64, URL, JWT, timestamps, UUIDs, case, hashes, … on the clipboard in place | [docs/screen-and-text.md](docs/screen-and-text.md) |
 
 Lodestone lives in the menu bar and never shows a Dock icon. The menu lists every action with its
-current shortcut. Settings… (⌘,) opens a window with tabs:
+current shortcut. Drop files on the menu bar icon, or use Finder's Services menu, for the converter,
+PDF and image actions. Settings… (⌘,) has a tab per feature. Activity (never clipboard, OCR or file
+contents) is logged for 7 days: `lodestone logs`.
 
-- General: drag snapping on or off, launch at login, Accessibility status
-- Halves & Quarters, Thirds, Sixths, Window: one shortcut per action
-
-To change a shortcut, click it and press the new combination. It needs at least one of ⌃ ⌥ ⌘, or an
-F-key. Press Delete to remove a shortcut, or Escape to cancel. Giving one action a combination that
-another action uses takes it from the other action. A shortcut shown in red is held by another app.
-Shortcuts are saved in the app's preferences (`app.lodestone.Lodestone`).
+To change a shortcut, click it in Settings and press the new combination. It needs at least one of
+⌃ ⌥ ⌘, or an F-key. Press Delete to remove a shortcut, or Escape to cancel. Giving one action a
+combination that another action uses takes it from the other action. A shortcut shown in red is
+held by another app. Every command can get a shortcut, including each clipboard transform and PDF
+action.
 
 ## Default shortcuts
 
-Taken from the Magnet configuration this replaces (Magnet's defaults plus sixths).
+| Action | Keys |
+| --- | --- |
+| Clipboard history | ⌃⌥ V |
+| Paste as plain text | ⌃⌥⇧ V |
+| Copy text from screen | ⌃⌥⇧ T |
+| Pick color | ⌃⌥⇧ C |
 
+Window snapping, taken from the Magnet configuration this replaces (Magnet's defaults plus sixths):
 | Action | Keys |
 | --- | --- |
 | 1/6 … 6/6 (six columns, left to right) | ⌃⌥ 1 2 3 4 5 6 |
@@ -108,6 +137,31 @@ Lodestone avoids both:
 - `AXEnhancedUserInterface` is switched off while resizing, so Chromium and Electron apps don't
   animate the resize.
 
+## Command line
+
+`lodestone` drives every feature. Conversions, PDF work, OCR of files and text transforms run inside
+the CLI process, so they work without the app. Windows, clipboard history, screen capture, the color
+picker and folder rules go through the running app (started if needed). Every command takes `--json`.
+
+```sh
+lodestone --help                 # command groups
+lodestone methods                # every IPC method with its parameters
+lodestone commands               # every shortcut-able command; run one with `lodestone run <id>`
+lodestone window snap leftHalf   # windows and displays
+lodestone convert clip.mov --to mp4 --preset share      # docs/converter.md
+lodestone presets list
+lodestone rules add ~/Desktop --kinds video --to mp4 --match 'Screen Recording*'   # docs/rules.md
+lodestone pdf merge a.pdf b.pdf -o both.pdf             # docs/pdf-and-image-tools.md
+lodestone image remove-background photo.jpg --crop
+lodestone clipboard history --search invoice            # docs/clipboard.md
+lodestone ocr screenshot.png                            # docs/screen-and-text.md
+lodestone text json-pretty < response.json
+lodestone color convert '#ff8800' --to swiftui
+lodestone shortcuts list         # and `shortcuts set <id> ctrl+opt+x`
+lodestone settings list          # and `settings set <key> <value>`
+lodestone logs --since 2h --category converter
+```
+
 ## Icons
 
 `Assets/AppIcon.svg` and `Assets/MenuBarIcon.svg` are the sources, generated by
@@ -120,6 +174,11 @@ normal build doesn't need this step.
 
 ## Layout
 
-- `Sources/LodestoneCore`: snap rectangles, edge zones, coordinate conversion and the shortcut
-  store, unit tested with `make test`.
-- `Sources/Lodestone`: the app (Accessibility, hotkeys, drag tracking, overlay, menu, Settings window).
+- `Sources/LodestoneCore`: pure logic (snap geometry, presets and ffmpeg arguments, folder rule
+  matching, text transforms, colors, page ranges, clipboard history), unit tested with `make test`.
+- `Sources/LodestoneKit`: engines shared by the app and the CLI: log, IPC, external tools, converter,
+  PDF, background removal, OCR, clipboard store, folder watcher.
+- `Sources/Lodestone`: the app. `Framework/` is the plumbing, `Features/<Name>/` one folder per feature.
+- `Sources/LodestoneCLI`: the `lodestone` command, one file per command group.
+
+`AGENTS.md` describes how to add a feature. `ROADMAP.md` lists what's planned.

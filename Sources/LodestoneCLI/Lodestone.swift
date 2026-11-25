@@ -19,6 +19,7 @@ struct LodestoneCommand: AsyncParsableCommand {
             WindowGroup.self,
             ConvertGroup.self,
             PresetsGroup.self,
+            RulesGroup.self,
             ImageGroup.self,
             PDFGroup.self,
             ClipboardGroup.self,

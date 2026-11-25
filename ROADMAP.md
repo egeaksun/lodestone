@@ -8,23 +8,17 @@ Quick utilities macOS is missing. Each ships with Settings, shortcuts where they
 - Window snapping: shortcuts, drag to edges, cycling across displays (`lodestone window`)
 - Activity log, 7-day retention (`lodestone logs`)
 - CLI over IPC (`lodestone --help`, `lodestone methods`)
-
-## Now: files and media
-
-1. Converter: images, video and audio with HandBrake-style presets. Drop on the menu bar icon,
-   Finder service, menu. Defaults in Settings.
-2. Image quick fixes: resize, compress, strip metadata and location, remove background.
-3. PDF tools: merge, compress, images to PDF.
-4. Automatic conversion: folder rules, for example new screen recordings become small MP4s.
-
-## Now: clipboard and text
-
-5. Clipboard history: searchable, pinned items, skips passwords.
-6. Paste as plain text.
-7. Copy text (and QR codes) from any region of the screen.
-8. Clipboard transforms for development: JSON format/minify, Base64, URL, JWT decode, timestamps,
-   UUIDs, case conversion.
-9. Screen color picker: hex, RGB, SwiftUI.
+- Converter: images, video and audio with HandBrake-style presets; drop on the menu bar icon, Finder
+  service, menu; defaults in Settings (`lodestone convert`, `lodestone presets`)
+- Image quick fixes: resize, compress, strip metadata and location (converter presets), remove
+  background (`lodestone image`)
+- PDF tools: merge, compress, images to PDF, extract/split, rotate, PDF to images, OCR (`lodestone pdf`)
+- Automatic conversion: folder rules, e.g. new screen recordings become MP4s (`lodestone rules`)
+- Clipboard history: searchable, pinned items, skips passwords (`lodestone clipboard`)
+- Paste as plain text
+- Copy text and QR codes from any region of the screen (`lodestone ocr`)
+- Clipboard transforms: JSON, Base64, URL, JWT, timestamps, UUIDs, case, hashes (`lodestone text`)
+- Screen color picker: hex, rgb(), hsl(), SwiftUI, NSColor, UIColor (`lodestone color`)
 
 ## Later
 

@@ -6,6 +6,7 @@ enum FeatureRegistry {
         [
             SnappingFeature(),
             ConverterFeature(),
+            RulesFeature(),
             ImageToolsFeature(),
             PDFToolsFeature(),
             ClipboardFeature(),
