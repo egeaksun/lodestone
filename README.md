@@ -31,6 +31,7 @@ when it needs it.
 | Feature | What it does | Docs |
 | --- | --- | --- |
 | Window snapping | Shortcuts and drag-to-edge snapping, repeat a shortcut to move across displays | below |
+| Drop shelf | Shake files while dragging them: a drop target appears at the pointer with every action for those files. Works with the menu bar hidden | Settings → Drop Shelf |
 | Converter | Images, video and audio with HandBrake-style presets; resize, compress, strip metadata and location | [docs/converter.md](docs/converter.md) |
 | Folder rules | Convert new files in a folder automatically, e.g. screen recordings → MP4 | [docs/rules.md](docs/rules.md) |
 | PDF tools | Merge, compress, images → PDF, extract/split, rotate, PDF → images, OCR | [docs/pdf-and-image-tools.md](docs/pdf-and-image-tools.md) |
@@ -41,8 +42,9 @@ when it needs it.
 | Clipboard transforms | JSON, Base64, URL, JWT, timestamps, UUIDs, case, hashes, … on the clipboard in place | [docs/screen-and-text.md](docs/screen-and-text.md) |
 
 Lodestone lives in the menu bar and never shows a Dock icon. The menu lists every action with its
-current shortcut. Drop files on the menu bar icon, or use Finder's Services menu, for the converter,
-PDF and image actions. Settings… (⌘,) has a tab per feature. Activity (never clipboard, OCR or file
+current shortcut. For the converter, PDF and image actions, shake files while dragging them to get
+the drop shelf, drop them on the menu bar icon, or use Finder's right-click menu (Quick Actions or
+Services → Lodestone Actions…). Settings… (⌘,) has a tab per feature. Activity (never clipboard, OCR or file
 contents) is logged for 7 days: `lodestone logs`.
 
 To change a shortcut, click it in Settings and press the new combination. It needs at least one of

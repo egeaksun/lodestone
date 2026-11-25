@@ -21,6 +21,10 @@ final class AppContext {
     var setShortcutsSuspendedHandler: ((Bool) -> Void)?
     var openSettingsHandler: ((String?) -> Void)?
     var rebuildShortcutsHandler: (() -> Void)?
+    var fileActionsHandler: (([URL]) -> [FileAction])?
+
+    /// Every feature's file actions that accept `urls` (what a drop on the menu bar icon offers).
+    func fileActions(for urls: [URL]) -> [FileAction] { fileActionsHandler?(urls) ?? [] }
 
     init(shortcuts: ShortcutStore, settings: SettingsStore) {
         self.shortcuts = shortcuts

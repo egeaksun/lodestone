@@ -45,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         context.rebuildShortcutsHandler = { [weak self] in self?.applyShortcuts() }
         context.openSettingsHandler = { [weak self] tab in self?.openSettings(tab: tab) }
+        context.fileActionsHandler = { [weak self] urls in self?.fileActions(for: urls) ?? [] }
         context.activities.onChange = { [weak self] in self?.updateStatusItem() }
 
         buildMainMenu()
