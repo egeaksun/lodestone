@@ -109,6 +109,10 @@ final class ClipboardFeature: Feature {
             store = ClipboardStore(directory: storeDirectory, persistent: context.settings.bool(Self.persistKey), limits: limits)
             Log.shared.info("clipboard", "store.loaded", ["items": .number(Double(store?.items.count ?? 0)),
                                                          "ms": .number(IPCRouter.ms(since: start))])
+        } else if !enabled && store != nil {
+            // Off means no history held in memory either; the files on disk stay for when it's back on.
+            store = nil
+            if panel.isVisible { panel.close() }
         }
         if enabled && !isPaused { monitor.start() } else { monitor.stop() }
     }
