@@ -81,6 +81,10 @@ public final class Log: @unchecked Sendable {
         }
     }
 
+    /// Paths.logs, except under XCTest, where engine tests would otherwise fill the user's log.
+    private static let directory: URL = NSClassFromString("XCTestCase") == nil ? Paths.logs
+        : Paths.ensure(FileManager.default.temporaryDirectory.appendingPathComponent("lodestone-test-logs", isDirectory: true))
+
     /// Waits until queued entries are on disk. The CLI calls this before exiting.
     public func flush() {
         queue.sync {}
@@ -97,7 +101,7 @@ public final class Log: @unchecked Sendable {
             try? handle?.close()
             handle = nil
             currentDay = day
-            let url = Paths.logs.appendingPathComponent("\(day).jsonl")
+            let url = Self.directory.appendingPathComponent("\(day).jsonl")
             if !FileManager.default.fileExists(atPath: url.path) {
                 FileManager.default.createFile(atPath: url.path, contents: nil, attributes: [.posixPermissions: 0o600])
             }
@@ -112,10 +116,10 @@ public final class Log: @unchecked Sendable {
     private func pruneNow(_ now: Date) {
         let cutoff = Calendar.current.date(byAdding: .day, value: -Self.retentionDays, to: now) ?? now
         let cutoffDay = Self.dayFormatter.string(from: cutoff)
-        let files = (try? FileManager.default.contentsOfDirectory(atPath: Paths.logs.path)) ?? []
+        let files = (try? FileManager.default.contentsOfDirectory(atPath: Self.directory.path)) ?? []
         for name in files where name.hasSuffix(".jsonl") {
             let day = String(name.dropLast(6))
-            if day < cutoffDay { try? FileManager.default.removeItem(at: Paths.logs.appendingPathComponent(name)) }
+            if day < cutoffDay { try? FileManager.default.removeItem(at: Self.directory.appendingPathComponent(name)) }
         }
     }
 
