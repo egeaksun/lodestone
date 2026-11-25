@@ -18,7 +18,7 @@ final class SnappingFeature: Feature {
     private lazy var drag = DragSnapper(windows: windows, layout: currentLayout())
     private var context: AppContext!
 
-    /// The Magnet setup this app replaced (Magnet's defaults plus ⌃⌥1–6 for sixths).
+    /// Magnet-compatible defaults (Magnet's layout plus ⌃⌥1–6 for sixths), so switching apps keeps muscle memory.
     private static let defaultShortcuts: [SnapAction: KeyCombo] = {
         let co = UInt32(controlKey | optionKey)
         let coc = co | UInt32(cmdKey)

@@ -1,186 +1,241 @@
-# Lodestone
+<p align="center">
+  <img src="docs/images/icon.png" width="128" height="128" alt="Lodestone icon">
+</p>
 
-A macOS menu bar utility: window snapping, plus file conversion, clipboard and screen tools that
-macOS is missing. Everything it does is also a `lodestone` command, with `--json` output for scripts
-and agents. Features cost nothing while idle.
+<h1 align="center">Lodestone</h1>
 
-## Install
+<p align="center">
+  <b>The quick utilities macOS is missing, in one menu bar app.</b><br>
+  Window snapping, a media converter, PDF tools, clipboard history, screen text and a color picker,<br>
+  all scriptable from the command line.
+</p>
 
-```sh
-make install   # builds, copies to /Applications, links ~/.local/bin/lodestone, launches
-```
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-14%2B-black?logo=apple" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white" alt="Swift 6">
+  <img src="https://img.shields.io/badge/AppKit-native-0A84FF" alt="Native AppKit">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license">
+</p>
 
-Then grant, in System Settings → Privacy & Security:
+<p align="center">
+  <img src="docs/images/clipboard-history.png" width="400" alt="Clipboard history panel">
+  &nbsp;
+  <img src="docs/images/convert-panel.png" width="440" alt="Convert panel">
+</p>
 
-- **Accessibility**: window snapping, and pasting from clipboard history and Paste as Plain Text.
-- **Screen & System Audio Recording**: Copy Text from Screen. Quit and reopen Lodestone after
-  turning it on.
+## Why Lodestone
 
-Quit Magnet first: both apps register the same snapping shortcuts.
-
-The build is ad-hoc signed, so macOS treats every rebuild as a new app: after `make install`, remove
-and re-add Lodestone under Accessibility (and Screen Recording). To avoid that, sign with a stable
-certificate: `make install SIGN_ID="Apple Development: …"`.
-
-Optional tools for more formats: `brew install ffmpeg webp libavif ghostscript` (video and audio,
-WebP, AVIF, stronger PDF compression). Lodestone works without them and says which one to install
-when it needs it.
+- **One small app instead of five.** Window snapping, a HandBrake-style converter, PDF tools, a clipboard manager,
+  OCR and a color picker share one menu bar icon, one Settings window and one set of shortcuts.
+- **Zero idle cost.** Nothing runs while you aren't using a feature: no event taps, no background work.
+  Monitors and timers exist only while their feature is on and needed; the busiest one, clipboard history,
+  compares a single number twice a second.
+- **Private by design.** Everything runs on your Mac. Lodestone makes no network connections. Its activity log
+  records what happened (files, sizes, errors), never clipboard text, screen text or file contents.
+- **Scriptable.** Every feature is also a `lodestone` command with `--json` output, for shell scripts,
+  Shortcuts and AI agents.
+- **Native.** Swift and AppKit, no Electron and no SwiftUI. It feels like part of macOS.
 
 ## Features
 
-| Feature | What it does | Docs |
-| --- | --- | --- |
-| Window snapping | Shortcuts and drag-to-edge snapping, repeat a shortcut to move across displays | below |
-| Drop shelf | Shake files while dragging them: a drop target appears at the pointer with every action for those files. Works with the menu bar hidden | Settings → Drop Shelf |
-| Converter | Images, video and audio with HandBrake-style presets; resize, compress, strip metadata and location | [docs/converter.md](docs/converter.md) |
-| Folder rules | Convert new files in a folder automatically, e.g. screen recordings → MP4 | [docs/rules.md](docs/rules.md) |
-| PDF tools | Merge, compress, images → PDF, extract/split, rotate, PDF → images, OCR | [docs/pdf-and-image-tools.md](docs/pdf-and-image-tools.md) |
-| Background removal | Cut out an image's subject into a transparent PNG | [docs/pdf-and-image-tools.md](docs/pdf-and-image-tools.md) |
-| Clipboard history | Searchable, pinned items, skips passwords; Paste as Plain Text | [docs/clipboard.md](docs/clipboard.md) |
-| Copy text from screen | Select a region, get its text or QR code on the clipboard | [docs/screen-and-text.md](docs/screen-and-text.md) |
-| Color picker | Pick a screen color as hex, rgb(), hsl(), SwiftUI, NSColor or UIColor | [docs/screen-and-text.md](docs/screen-and-text.md) |
-| Clipboard transforms | JSON, Base64, URL, JWT, timestamps, UUIDs, case, hashes, … on the clipboard in place | [docs/screen-and-text.md](docs/screen-and-text.md) |
+### Window snapping
+Halves, quarters, thirds, two-thirds and sixths from the keyboard, or by dragging a window to a screen edge.
+Press a shortcut again and the window moves to the same position on the next display. Restore puts it back.
+[Details below](#window-snapping-in-detail).
 
-Lodestone lives in the menu bar and never shows a Dock icon. The menu lists every action with its
-current shortcut. For the converter, PDF and image actions, shake files while dragging them to get
-the drop shelf, drop them on the menu bar icon, or use Finder's right-click menu (Quick Actions or
-Services → Lodestone Actions…). Settings… (⌘,) has a tab per feature. Activity (never clipboard, OCR or file
-contents) is logged for 7 days: `lodestone logs`.
+### Converter
+Images, video and audio with HandBrake-style presets: Instant (no re-encode), High quality, Balanced, Small
+file, Share. Resize, compress and strip metadata and location from photos. WebP, AVIF, HEVC, ProRes, WebM, FLAC
+at 24-bit/96 kHz, and more. Save your own presets. → [docs/converter.md](docs/converter.md)
 
-To change a shortcut, click it in Settings and press the new combination. It needs at least one of
-⌃ ⌥ ⌘, or an F-key. Press Delete to remove a shortcut, or Escape to cancel. Giving one action a
-combination that another action uses takes it from the other action. A shortcut shown in red is
-held by another app. Every command can get a shortcut, including each clipboard transform and PDF
-action.
+### Drop shelf
+<img src="docs/images/drop-shelf.png" width="200" align="right" alt="Drop shelf">
+
+Start dragging files anywhere and **shake the pointer**: a drop target appears next to it. Drop the files and it
+lists everything Lodestone can do with them: convert, compress, merge PDFs, remove a background. It works with
+the menu bar hidden. You can also drop on the menu bar icon or use Finder's right-click menu.
+
+### Folder rules
+Convert new files automatically. For example, new screen recordings on the Desktop become MP4s, or screenshots
+get compressed. Lodestone waits until a file has finished being written and never converts its own output.
+→ [docs/rules.md](docs/rules.md)
+
+### PDF tools and background removal
+Merge, compress (with Ghostscript when installed; text stays selectable), images to PDF, extract and split pages,
+rotate, export pages as images, and OCR to make scans searchable. Cut the subject out of a photo into a
+transparent PNG with Vision. → [docs/pdf-and-image-tools.md](docs/pdf-and-image-tools.md)
+
+### Clipboard history and paste as plain text
+A searchable history of text, rich text, images and files, with pinned items. It skips passwords: items that
+password managers mark as concealed, and anything copied while 1Password, Bitwarden or Passwords is in front.
+Paste as plain text strips formatting, then puts the formatted copy back. → [docs/clipboard.md](docs/clipboard.md)
+
+### Copy text from the screen
+Drag over any region to copy its text, keeping line breaks, or the contents of a QR code or barcode.
+→ [docs/screen-and-text.md](docs/screen-and-text.md)
+
+### Color picker
+Click any pixel and get it as hex, `rgb()`, `hsl()`, SwiftUI, `NSColor` or `UIColor`. The last ten colors stay in
+the menu, ready to copy in another format.
+
+### Clipboard transforms
+Turn the clipboard's text into something else in place: pretty-print or minify JSON, Base64, URL and HTML
+encoding, decode a JWT, convert Unix timestamps, generate UUIDs, change case, sort and dedupe lines, hash with
+MD5/SHA-1/SHA-256. Every transform can have its own shortcut.
+
+<p align="center">
+  <img src="docs/images/folder-rules.png" width="420" alt="Folder rules settings">
+  &nbsp;
+  <img src="docs/images/rule-editor.png" width="300" alt="Folder rule editor">
+</p>
 
 ## Default shortcuts
 
 | Action | Keys |
 | --- | --- |
-| Clipboard history | ⌃⌥ V |
-| Paste as plain text | ⌃⌥⇧ V |
-| Copy text from screen | ⌃⌥⇧ T |
-| Pick color | ⌃⌥⇧ C |
+| Clipboard history | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>V</kbd> |
+| Paste as plain text | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>V</kbd> |
+| Copy text from screen | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>T</kbd> |
+| Pick a color | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⇧</kbd><kbd>C</kbd> |
+| Drop shelf | drag files, then shake |
 
-Window snapping, taken from the Magnet configuration this replaces (Magnet's defaults plus sixths):
+<details>
+<summary><b>Window snapping shortcuts</b> (Magnet-compatible, plus sixths)</summary>
+
 | Action | Keys |
 | --- | --- |
-| 1/6 … 6/6 (six columns, left to right) | ⌃⌥ 1 2 3 4 5 6 |
-| Left / Right / Top / Bottom half | ⌃⌥ ← → ↑ ↓ |
-| Top left / Top right / Bottom left / Bottom right | ⌃⌥ U I J K |
-| Left / Center / Right third | ⌃⌥ D F G |
-| Left / Center / Right two thirds | ⌃⌥ E R T |
-| Maximize | ⌃⌥ ↩ |
-| Center | ⌃⌥ C |
-| Restore | ⌃⌥ ⌫ |
-| Next / Previous display | ⌃⌥⌘ → ← |
+| Left / Right / Top / Bottom half | <kbd>⌃</kbd><kbd>⌥</kbd> + <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> |
+| Top left / Top right / Bottom left / Bottom right | <kbd>⌃</kbd><kbd>⌥</kbd> + <kbd>U</kbd> <kbd>I</kbd> <kbd>J</kbd> <kbd>K</kbd> |
+| Left / Center / Right third | <kbd>⌃</kbd><kbd>⌥</kbd> + <kbd>D</kbd> <kbd>F</kbd> <kbd>G</kbd> |
+| Left / Center / Right two thirds | <kbd>⌃</kbd><kbd>⌥</kbd> + <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> |
+| 1/6 … 6/6 (six columns, left to right) | <kbd>⌃</kbd><kbd>⌥</kbd> + <kbd>1</kbd> … <kbd>6</kbd> |
+| Maximize | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>↩</kbd> |
+| Center | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>C</kbd> |
+| Restore | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌫</kbd> |
+| Next / Previous display | <kbd>⌃</kbd><kbd>⌥</kbd><kbd>⌘</kbd> + <kbd>→</kbd> <kbd>←</kbd> |
 
-## Moving across displays
+</details>
 
-Press a shortcut again on a window that is already in that position, and the window moves to the same
-position on the next display. For example, ⌃⌥T puts a window on the right two thirds of the left
-monitor; pressing it again moves it to the right two thirds of the center monitor.
+<details>
+<summary><b>Clipboard history panel keys</b></summary>
 
-- Displays are ordered by where they physically sit, left to right, not by macOS's internal order.
-- Left-side positions (left half, left third, sixths 1–3, …) move left. Right-side positions move
-  right. Centered positions (maximize, center, center third, …) move right. It wraps around at the
-  last display.
-- A repeat is detected both from the last action Lodestone applied to the window and from the window's
-  frame, so it also works for windows snapped by dragging, or apps that adjust the requested size.
-- Restore still returns the window to its size and place from before the first snap.
-- ⌃⌥⌘ → / ← move a window to the display on the right or left, keeping its relative position.
+| Action | Keys |
+| --- | --- |
+| Search | just type |
+| Paste the selected item | <kbd>↩</kbd> |
+| Paste it as plain text | <kbd>⌥</kbd><kbd>↩</kbd> |
+| Quick-paste item 1–9 | <kbd>⌘</kbd><kbd>1</kbd> … <kbd>⌘</kbd><kbd>9</kbd> |
+| Pin / unpin | <kbd>⌘</kbd><kbd>P</kbd> |
+| Delete | <kbd>⌘</kbd><kbd>⌫</kbd> |
+| Close | <kbd>esc</kbd> |
 
-Turn it off in Settings → General.
+</details>
 
-## Drag to snap
+Every command can be given a shortcut in Settings, including each PDF action and each clipboard transform. Click a
+shortcut and press the new combination. A shortcut shown in red is already taken by another app.
 
-Drag a window by its title bar to a screen edge. The zones follow Magnet's default layout: the screen
-is a 24 × 12 grid, and the cell along the edge the cursor touches picks the action.
+## Install
 
-- Corners (one cell each): quarters
-- Top edge: maximize
-- Left / right edge: top half (upper quarter of the edge), left / right half (middle), bottom half
-  (lower quarter)
-- Bottom edge, left to right: left third, left two thirds, center third, right two thirds, right third
+Requirements: macOS 14 Sonoma or later, and Xcode 16 or a Swift 6 toolchain.
 
-Portrait screens use a 12 × 24 grid: the side edges stack top half, thirds, two-thirds and bottom half,
-and the bottom edge splits into left and right halves.
+```sh
+git clone https://github.com/egeaksun/lodestone.git
+cd lodestone
+make install   # builds, copies to /Applications, links ~/.local/bin/lodestone, launches
+```
 
-A snapped window that is dragged away goes back to its previous size.
+Then, in **System Settings → Privacy & Security**, turn on Lodestone under:
 
-If macOS's own edge tiling is on, turn it off so the two don't compete: System Settings → Desktop &
-Dock → "Drag windows to screen edges to tile".
+- **Accessibility** for window snapping, and for pasting from clipboard history and Paste as Plain Text.
+- **Screen & System Audio Recording** for Copy Text from Screen. Quit and reopen Lodestone afterwards.
 
-## Why it doesn't lag
+If you use Magnet or Rectangle, quit it first: they register the same snapping shortcuts.
 
-Snapping apps usually make window dragging choppy for one of two reasons:
+**Optional tools** add formats and stronger PDF compression. Lodestone works without them and tells you which
+one to install when it needs it:
 
-1. **An active event tap.** With an active `CGEventTap`, the window server hands every mouse event to
-   the app and waits for it to return the event before continuing. Any hiccup in that app turns into
-   cursor and window stutter.
-2. **Accessibility calls per mouse event.** Each AX call is a synchronous IPC round-trip into the app
-   that owns the window. Making one on every dragged event (60 to 120 per second) loads both processes.
+```sh
+brew install ffmpeg webp libavif ghostscript
+```
 
-Lodestone avoids both:
-
-- Mouse input comes from passive `NSEvent` global monitors. These receive copies of events after the
-  fact, so the event stream never waits on Lodestone.
-- The drag monitor is installed on mouse-down and removed on mouse-up. While idle, Lodestone receives
-  nothing but clicks.
-- Per dragged event the work is a point-in-rectangle test against a cached screen layout.
-- A drag gesture makes about three AX calls in total (find the window under the cursor, confirm it is
-  moving, set its frame), all on a background queue with a 0.3 s timeout. A hung app can't stall the
-  cursor or the overlay.
-- Position and size are read in one round-trip (`AXUIElementCopyMultipleAttributeValues`).
-- The preview overlay is one reused, layer-backed window with no blur and no animation. It is only
-  touched when the target zone changes.
-- Shortcuts use Carbon `RegisterEventHotKey`: the system matches the key combination itself, with no
-  keyboard event tap.
-- `AXEnhancedUserInterface` is switched off while resizing, so Chromium and Electron apps don't
-  animate the resize.
+> [!NOTE]
+> The build is signed ad hoc, so macOS treats every rebuild as a new app and forgets its permissions. Turn
+> Lodestone on again after each `make install`, or sign with a stable certificate:
+> `make install SIGN_ID="Apple Development: …"`.
 
 ## Command line
 
-`lodestone` drives every feature. Conversions, PDF work, OCR of files and text transforms run inside
-the CLI process, so they work without the app. Windows, clipboard history, screen capture, the color
-picker and folder rules go through the running app (started if needed). Every command takes `--json`.
+`lodestone` drives every feature. Conversions, PDF work, OCR of files and text transforms run inside the CLI
+process, so they work without the app. Windows, clipboard history, screen capture, the color picker and folder
+rules go through the running app (it starts if needed). Every command takes `--json`.
 
 ```sh
-lodestone --help                 # command groups
-lodestone methods                # every IPC method with its parameters
-lodestone commands               # every shortcut-able command; run one with `lodestone run <id>`
-lodestone window snap leftHalf   # windows and displays
-lodestone convert clip.mov --to mp4 --preset share      # docs/converter.md
-lodestone presets list
-lodestone rules add ~/Desktop --kinds video --to mp4 --match 'Screen Recording*'   # docs/rules.md
-lodestone pdf merge a.pdf b.pdf -o both.pdf             # docs/pdf-and-image-tools.md
+lodestone convert clip.mov --to mp4 --preset share
+lodestone convert song.wav --to flac --sample-rate 96000 --bit-depth 24
+lodestone convert clip.mov --dry-run          # print the exact ffmpeg command
+lodestone rules add ~/Desktop --kinds video --to mp4 --match 'Screen Recording*'
+lodestone pdf merge a.pdf b.pdf -o both.pdf
+lodestone pdf compress big.pdf --level strong
 lodestone image remove-background photo.jpg --crop
-lodestone clipboard history --search invoice            # docs/clipboard.md
-lodestone ocr screenshot.png                            # docs/screen-and-text.md
+lodestone clipboard history --search invoice
+lodestone ocr screenshot.png
 lodestone text json-pretty < response.json
 lodestone color convert '#ff8800' --to swiftui
-lodestone shortcuts list         # and `shortcuts set <id> ctrl+opt+x`
-lodestone settings list          # and `settings set <key> <value>`
+lodestone window snap leftHalf --app Safari
+lodestone shortcuts set pdf.merge ctrl+opt+m
 lodestone logs --since 2h --category converter
 ```
 
-## Icons
+Discover the rest with `lodestone --help`, `lodestone commands` (everything a shortcut can run) and
+`lodestone methods` (every method the app exposes, with its parameters).
 
-`Assets/AppIcon.svg` and `Assets/MenuBarIcon.svg` are the sources, generated by
-`scripts/generate-icon-svgs.py`. The stone is 11 flat facets, hand-traced from a generated reference
-illustration. It sits on a porcelain-white squircle; `copper`, `silver` and `midnight` frames are also
-built in (pass the name as the script's second argument). The menu bar icon uses the same
-facets as alpha levels, so macOS can tint it for light and dark menu bars. `make icons` regenerates them and renders `Resources/AppIcon.icns`
-and the menu bar template PNGs with AppKit's SVG support. The rendered files are committed, so a
-normal build doesn't need this step.
+## Window snapping in detail
 
-## Layout
+**Moving across displays.** Press a shortcut on a window that's already in that position and it moves to the
+same position on the next display. Left-side positions move left, right-side and centered ones move right, and
+it wraps around. Displays are ordered by where they physically sit. A repeat is recognized from the last
+action and from the window's frame, so it also works for windows snapped by dragging.
 
-- `Sources/LodestoneCore`: pure logic (snap geometry, presets and ffmpeg arguments, folder rule
-  matching, text transforms, colors, page ranges, clipboard history), unit tested with `make test`.
-- `Sources/LodestoneKit`: engines shared by the app and the CLI: log, IPC, external tools, converter,
-  PDF, background removal, OCR, clipboard store, folder watcher.
-- `Sources/Lodestone`: the app. `Framework/` is the plumbing, `Features/<Name>/` one folder per feature.
-- `Sources/LodestoneCLI`: the `lodestone` command, one file per command group.
+**Drag to snap.** Drag a window by its title bar to a screen edge. Corners give quarters, the top edge
+maximizes, the side edges give halves (top and bottom halves near their ends), and the bottom edge gives thirds
+and two-thirds. A snapped window that is dragged away goes back to its previous size. If macOS's own tiling is
+on, turn it off so the two don't compete: System Settings → Desktop & Dock → "Drag windows to screen edges to
+tile".
 
-`AGENTS.md` describes how to add a feature. `ROADMAP.md` lists what's planned.
+**Why it doesn't lag.** Snapping apps usually make window dragging choppy for one of two reasons: an active
+event tap, which makes the window server wait on the app for every mouse event, or Accessibility calls on every
+dragged event. Lodestone avoids both:
+
+- Mouse input comes from passive `NSEvent` global monitors, which receive copies of events after the fact.
+- The drag monitor exists only while the button is down; each dragged event is a point-in-rectangle test.
+- A drag gesture makes about three Accessibility calls in total, on a background queue with a timeout.
+- Shortcuts use Carbon `RegisterEventHotKey`, so there's no keyboard event tap.
+- The preview overlay is one reused, layer-backed window, touched only when the target zone changes.
+
+## Project layout
+
+| Path | What's there |
+| --- | --- |
+| `Sources/LodestoneCore` | Pure logic: snap geometry, presets and ffmpeg arguments, folder rule matching, text transforms, colors, page ranges, clipboard history. Unit tested. |
+| `Sources/LodestoneKit` | Engines shared by the app and the CLI: activity log, IPC, external tools, converter, PDF, background removal, OCR, clipboard store, folder watcher. |
+| `Sources/Lodestone` | The app. `Framework/` is the plumbing; `Features/<Name>/` has one folder per feature. |
+| `Sources/LodestoneCLI` | The `lodestone` command, one file per command group. |
+| `docs/` | User documentation for each feature. |
+
+```sh
+swift build
+swift test   # or: make test
+```
+
+## Contributing
+
+Issues and pull requests are welcome. [AGENTS.md](AGENTS.md) explains the architecture and how to add a feature,
+and lists the rules every feature follows: zero idle cost, log outcomes not contents, and full CLI parity.
+[ROADMAP.md](ROADMAP.md) lists what's planned next.
+
+The app icon is drawn in code: `Assets/*.svg` are generated by `scripts/generate-icon-svgs.py`, and `make icons`
+renders them into `Resources/`.
+
+## License
+
+[MIT](LICENSE)

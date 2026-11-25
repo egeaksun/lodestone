@@ -29,5 +29,5 @@ Quick utilities macOS is missing. Each ships with Settings, shortcuts where they
 - Keep awake with a timer
 - Global microphone mute with an indicator
 - Menu bar calendar
-- Quick capture into the Obsidian inbox
+- Quick capture into a notes inbox (Obsidian, Apple Notes)
 - Hide menu bar icons behind the notch (fragile on macOS 15)
