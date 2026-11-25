@@ -94,12 +94,21 @@ final class SnappingFeature: Feature {
                               bundleID: $0.bundleIdentifier, isActive: $0.isActive) }
     }
 
+    private var promptedForAccessibility = false
+
     /// Shortcut and menu entry point: acts on the frontmost app's focused window.
     private func perform(_ action: SnapAction) {
         guard context.isAccessibilityTrusted else {
             Log.shared.warn("window", "snap.no_accessibility", ["action": .string(action.rawValue)])
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-            _ = AXIsProcessTrustedWithOptions(options)
+            // The system dialog once per launch; after that a beep, so a held-down habit doesn't stack
+            // dialogs. The menu keeps a "Grant Accessibility Access…" item until access is granted.
+            if promptedForAccessibility {
+                NSSound.beep()
+            } else {
+                promptedForAccessibility = true
+                let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+                _ = AXIsProcessTrustedWithOptions(options)
+            }
             return
         }
         guard let front = NSWorkspace.shared.frontmostApplication else { return }
