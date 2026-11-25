@@ -7,7 +7,7 @@ import math
 import sys
 
 out = sys.argv[1]
-frame_name = sys.argv[2] if len(sys.argv) > 2 else "copper"
+frame_name = sys.argv[2] if len(sys.argv) > 2 else "porcelain"
 
 # Stone geometry, in the coordinates it was traced in (a 1024 canvas, stone centered near 510,511).
 V = {
@@ -63,12 +63,14 @@ def squircle(cx, cy, a, n=5, steps=256):
 
 
 FRAMES = {
+    # Glazed porcelain: a warm white with a faint cool shadow toward the bottom.
+    "porcelain": dict(top="#FCFBF8", bottom="#E4E2DE", glow="#FFFFFF", glow_opacity=0.9, shadow=0.32),
     # Warm copper plate: high contrast against the iron stone, and it echoes the rust facets.
-    "copper": dict(top="#F6BC74", bottom="#A9441C", glow="#FFE6B8", glow_opacity=0.6, field="#6B2408", field_opacity=0.32),
+    "copper": dict(top="#F6BC74", bottom="#A9441C", glow="#FFE6B8", glow_opacity=0.6, shadow=0.5),
     # Brushed silver plate.
-    "silver": dict(top="#F4F6F9", bottom="#B9C2CF", glow="#FFFFFF", glow_opacity=0.7, field="#5D6B80", field_opacity=0.16),
+    "silver": dict(top="#F4F6F9", bottom="#B9C2CF", glow="#FFFFFF", glow_opacity=0.7, shadow=0.4),
     # Deep blue-black, the closest to Obsidian's mood.
-    "midnight": dict(top="#3A4A6E", bottom="#121725", glow="#8FB3E8", glow_opacity=0.35, field="#9FB8E0", field_opacity=0.12),
+    "midnight": dict(top="#3A4A6E", bottom="#121725", glow="#8FB3E8", glow_opacity=0.35, shadow=0.5),
 }
 
 body = squircle(512, 512, 412)
@@ -92,12 +94,6 @@ for i, (name, verts, color, _) in enumerate(FACETS):
     shapes.append('<polygon points="%s" fill="url(#%s)" stroke="%s" stroke-width="0.8" stroke-linejoin="round"/>'
                   % (pts(verts, place), gid, color))
 
-# Magnetic field lines: faint arcs around the stone, like iron filings on paper.
-field = []
-for k, (rx, ry) in enumerate([(352, 250), (396, 290), (440, 330)]):
-    field.append('<ellipse cx="%d" cy="%d" rx="%d" ry="%d" fill="none" stroke="%s" stroke-opacity="%.3f" stroke-width="%.1f" stroke-linecap="round" stroke-dasharray="0.1 %d"/>'
-                 % (TX, TY + 14, rx, ry, fr["field"], fr["field_opacity"] * (1 - 0.28 * k), 7 - 1.5 * k, 16 + 4 * k))
-
 app = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
@@ -113,8 +109,8 @@ app = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" vie
       <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
     <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#000000" stop-opacity="0.5"/>
-      <stop offset="0.6" stop-color="#000000" stop-opacity="0.18"/>
+      <stop offset="0" stop-color="#000000" stop-opacity="{fr["shadow"]}"/>
+      <stop offset="0.6" stop-color="#000000" stop-opacity="{fr["shadow"] * 0.36:.3f}"/>
       <stop offset="1" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
     <clipPath id="body"><path d="{body}"/></clipPath>
@@ -123,7 +119,6 @@ app = f'''<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" vie
   <path d="{body}" fill="url(#bg)"/>
   <g clip-path="url(#body)">
     <rect x="100" y="100" width="824" height="824" fill="url(#glow)"/>
-    {"".join(field)}
     <ellipse cx="{TX + 10}" cy="{TY + 205}" rx="300" ry="44" fill="url(#shadow)"/>
   </g>
   <path d="{body}" fill="url(#sheen)"/>
