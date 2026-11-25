@@ -9,6 +9,8 @@ enum FeatureRegistry {
             ScreenTextFeature(),
             ColorPickerFeature(),
             TextTransformsFeature(),
+            PDFToolsFeature(),
+            ImageToolsFeature(),
         ]
     }
 }

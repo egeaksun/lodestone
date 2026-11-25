@@ -26,6 +26,8 @@ struct LodestoneCommand: AsyncParsableCommand {
             TextCommand.self,
             OCRCommand.self,
             ColorGroup.self,
+            PDFGroup.self,
+            ImageGroup.self,
             Logs.self,
             Methods.self,
             Call.self,
