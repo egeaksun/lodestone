@@ -6,13 +6,6 @@ import UniformTypeIdentifiers
 /// Pieces the PDF and image tools share: recognizing files, picking them, asking for options, and
 /// running a job in the background with menu bar progress.
 
-/// What happens after a job writes its results.
-enum AfterJob: String, CaseIterable {
-    case reveal, notify, nothing
-
-    static let labels = ["reveal": "Reveal in Finder", "notify": "Show a notification", "nothing": "Do nothing"]
-}
-
 enum FileKind {
     static func type(of url: URL) -> UTType? {
         (try? url.resourceValues(forKeys: [.contentTypeKey]))?.contentType ?? UTType(filenameExtension: url.pathExtension)
@@ -167,11 +160,7 @@ enum ToolJob {
                 context.notify(title: title, body: outcome.summary)
                 return
             }
-            switch after {
-            case .reveal: NSWorkspace.shared.activateFileViewerSelecting(outcome.files)
-            case .notify: context.notify(title: title, body: outcome.summary)
-            case .nothing: break
-            }
+            after.perform(context, files: outcome.files, title: title, body: outcome.summary)
         case .failure(let error):
             let ipc = error as? IPCError
             if ipc?.code == "cancelled" || error is CancellationError { return }

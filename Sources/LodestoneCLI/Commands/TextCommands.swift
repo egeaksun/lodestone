@@ -66,8 +66,7 @@ struct TextCommand: ParsableCommand {
         }
         let writesClipboard = clipboard && t.replacesText
         if writesClipboard {
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(output, forType: .string)
+            PasteboardIO.setText(output)
         }
         Log.shared.info("text", "transform", ["name": .string(t.rawValue), "source": .string(source), "chars": .number(Double(input.count)),
                                               "ms": .number((Date().timeIntervalSince(start) * 1000).rounded())])

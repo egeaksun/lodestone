@@ -51,8 +51,7 @@ final class TextTransformsFeature: Feature {
             let output = try transform.apply(input)
             let ms = (Date().timeIntervalSince(start) * 1000).rounded()
             if transform.replacesText {
-                pasteboard.clearContents()
-                pasteboard.setString(output, forType: .string)
+                PasteboardIO.setText(output, pasteboard)
             }
             Log.shared.info(id, "transform", ["name": .string(transform.rawValue), "chars": .number(Double(input.count)), "ms": .number(ms)])
             context.toast(transform.replacesText ? transform.doneMessage : output)

@@ -35,7 +35,10 @@ public enum ExternalTool: String, CaseIterable, Sendable {
 
     fileprivate func find() -> URL? {
         let fm = FileManager.default
-        let pathDirs = (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":").map(String.init)
+        let env = ProcessInfo.processInfo.environment
+        // LODESTONE_HIDE_TOOLS=ffmpeg,cwebp pretends those tools aren't installed, to exercise fallbacks.
+        if (env["LODESTONE_HIDE_TOOLS"] ?? "").split(separator: ",").contains(where: { $0 == rawValue }) { return nil }
+        let pathDirs = (env["PATH"] ?? "").split(separator: ":").map(String.init)
         for dir in Self.searchDirectories + pathDirs {
             let candidate = URL(fileURLWithPath: dir).appendingPathComponent(rawValue)
             if fm.isExecutableFile(atPath: candidate.path) { return candidate }

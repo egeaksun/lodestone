@@ -78,8 +78,7 @@ final class ColorPickerFeature: Feature {
 
     private func copy(_ value: ColorValue, as format: ColorFormat, via: String) {
         let text = value.formatted(format)
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
+        PasteboardIO.setText(text)
         Log.shared.info(id, "copy", ["format": .string(format.rawValue), "via": .string(via)])
         context.toast("Copied \(text)", color: Self.nsColor(value))
     }

@@ -5,12 +5,13 @@ enum FeatureRegistry {
     static func make() -> [Feature] {
         [
             SnappingFeature(),
+            ConverterFeature(),
+            ImageToolsFeature(),
+            PDFToolsFeature(),
             ClipboardFeature(),
             ScreenTextFeature(),
             ColorPickerFeature(),
             TextTransformsFeature(),
-            PDFToolsFeature(),
-            ImageToolsFeature(),
         ]
     }
 }

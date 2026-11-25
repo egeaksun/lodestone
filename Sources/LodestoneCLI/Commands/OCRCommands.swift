@@ -62,8 +62,7 @@ struct OCRCommand: ParsableCommand {
             }
         }
         if copy, let clip = results.compactMap({ OCRClipboard($0.result, preference: .code) }).map(\.text).nilIfEmpty {
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(clip.joined(separator: "\n\n"), forType: .string)
+            PasteboardIO.setText(clip.joined(separator: "\n\n"))
         }
 
         if global.json {

@@ -12,7 +12,7 @@ public struct LogEntry: Codable, Sendable {
 
     public var ts: Date
     public var level: Level
-    /// The feature or subsystem, for example "window", "convert", "clipboard", "ipc", "cli".
+    /// The feature or subsystem, for example "window", "converter", "clipboard", "ipc", "cli".
     public var cat: String
     /// What happened, short and stable ("snap", "convert.done", "hotkey.register_failed").
     public var msg: String

@@ -7,11 +7,11 @@ import LodestoneKit
 struct Logs: ParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Show the activity log (kept for 7 days).",
-        discussion: "Examples: lodestone logs --since 2h --level warn; lodestone logs --category convert --follow")
+        discussion: "Examples: lodestone logs --since 2h --level warn; lodestone logs --category converter --follow")
 
     @Option(help: "How far back: 30m, 2h, 3d (default 1d).") var since = "1d"
     @Option(help: "Minimum level: debug, info, warn, error.") var level = "info"
-    @Option(help: "Only this category (window, convert, clipboard, ipc, cli, ...).") var category: String?
+    @Option(help: "Only this category (window, converter, pdf, image, clipboard, screen, color, text, ipc, cli, ...).") var category: String?
     @Option(help: "Only entries whose message or data contains this text.") var grep: String?
     @Option(help: "At most this many entries (the most recent).") var limit = 200
     @Flag(help: "Keep printing new entries as they arrive.") var follow = false
