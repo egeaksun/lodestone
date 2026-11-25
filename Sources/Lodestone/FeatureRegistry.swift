@@ -6,6 +6,9 @@ enum FeatureRegistry {
         [
             SnappingFeature(),
             ClipboardFeature(),
+            ScreenTextFeature(),
+            ColorPickerFeature(),
+            TextTransformsFeature(),
         ]
     }
 }
