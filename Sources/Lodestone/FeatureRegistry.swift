@@ -5,6 +5,8 @@ enum FeatureRegistry {
     static func make() -> [Feature] {
         [
             SnappingFeature(),
+            PDFToolsFeature(),
+            ImageToolsFeature(),
         ]
     }
 }
