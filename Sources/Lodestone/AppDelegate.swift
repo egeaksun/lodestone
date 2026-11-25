@@ -1,51 +1,21 @@
 import AppKit
 import Carbon.HIToolbox
 import LodestoneCore
-import ServiceManagement
 
-private struct Shortcut {
-    let action: SnapAction
-    let keyCode: Int
-    let modifiers: Int
-    /// Shown in the menu only. Menu key equivalents of a status item never fire globally.
-    let key: String
-    let flags: NSEvent.ModifierFlags
-}
-
-private func arrow(_ c: Int) -> String { String(UnicodeScalar(UInt16(c)).map(Character.init) ?? " ") }
-
-/// The bindings from your Magnet setup (com.crowdcafe.windowmagnet): its defaults plus ⌃⌥1–6 for sixths.
-private let shortcuts: [Shortcut] = {
-    let co = controlKey | optionKey
-    let coc = co | cmdKey
-    let f: NSEvent.ModifierFlags = [.control, .option]
-    let fc: NSEvent.ModifierFlags = [.control, .option, .command]
+/// Default shortcuts: the Magnet setup this app replaces (Magnet's defaults plus ⌃⌥1–6 for sixths).
+private let defaultShortcuts: [SnapAction: KeyCombo] = {
+    let co = UInt32(controlKey | optionKey)
+    let coc = co | UInt32(cmdKey)
+    func k(_ code: Int, _ mods: UInt32 = co) -> KeyCombo { KeyCombo(keyCode: UInt32(code), modifiers: mods) }
     return [
-        Shortcut(action: .leftHalf, keyCode: kVK_LeftArrow, modifiers: co, key: arrow(NSLeftArrowFunctionKey), flags: f),
-        Shortcut(action: .rightHalf, keyCode: kVK_RightArrow, modifiers: co, key: arrow(NSRightArrowFunctionKey), flags: f),
-        Shortcut(action: .topHalf, keyCode: kVK_UpArrow, modifiers: co, key: arrow(NSUpArrowFunctionKey), flags: f),
-        Shortcut(action: .bottomHalf, keyCode: kVK_DownArrow, modifiers: co, key: arrow(NSDownArrowFunctionKey), flags: f),
-        Shortcut(action: .topLeft, keyCode: kVK_ANSI_U, modifiers: co, key: "u", flags: f),
-        Shortcut(action: .topRight, keyCode: kVK_ANSI_I, modifiers: co, key: "i", flags: f),
-        Shortcut(action: .bottomLeft, keyCode: kVK_ANSI_J, modifiers: co, key: "j", flags: f),
-        Shortcut(action: .bottomRight, keyCode: kVK_ANSI_K, modifiers: co, key: "k", flags: f),
-        Shortcut(action: .firstThird, keyCode: kVK_ANSI_D, modifiers: co, key: "d", flags: f),
-        Shortcut(action: .centerThird, keyCode: kVK_ANSI_F, modifiers: co, key: "f", flags: f),
-        Shortcut(action: .lastThird, keyCode: kVK_ANSI_G, modifiers: co, key: "g", flags: f),
-        Shortcut(action: .firstTwoThirds, keyCode: kVK_ANSI_E, modifiers: co, key: "e", flags: f),
-        Shortcut(action: .centerTwoThirds, keyCode: kVK_ANSI_R, modifiers: co, key: "r", flags: f),
-        Shortcut(action: .lastTwoThirds, keyCode: kVK_ANSI_T, modifiers: co, key: "t", flags: f),
-        Shortcut(action: .sixth1, keyCode: kVK_ANSI_1, modifiers: co, key: "1", flags: f),
-        Shortcut(action: .sixth2, keyCode: kVK_ANSI_2, modifiers: co, key: "2", flags: f),
-        Shortcut(action: .sixth3, keyCode: kVK_ANSI_3, modifiers: co, key: "3", flags: f),
-        Shortcut(action: .sixth4, keyCode: kVK_ANSI_4, modifiers: co, key: "4", flags: f),
-        Shortcut(action: .sixth5, keyCode: kVK_ANSI_5, modifiers: co, key: "5", flags: f),
-        Shortcut(action: .sixth6, keyCode: kVK_ANSI_6, modifiers: co, key: "6", flags: f),
-        Shortcut(action: .maximize, keyCode: kVK_Return, modifiers: co, key: "\r", flags: f),
-        Shortcut(action: .center, keyCode: kVK_ANSI_C, modifiers: co, key: "c", flags: f),
-        Shortcut(action: .restore, keyCode: kVK_Delete, modifiers: co, key: "\u{8}", flags: f),
-        Shortcut(action: .nextDisplay, keyCode: kVK_RightArrow, modifiers: coc, key: arrow(NSRightArrowFunctionKey), flags: fc),
-        Shortcut(action: .previousDisplay, keyCode: kVK_LeftArrow, modifiers: coc, key: arrow(NSLeftArrowFunctionKey), flags: fc),
+        .leftHalf: k(kVK_LeftArrow), .rightHalf: k(kVK_RightArrow), .topHalf: k(kVK_UpArrow), .bottomHalf: k(kVK_DownArrow),
+        .topLeft: k(kVK_ANSI_U), .topRight: k(kVK_ANSI_I), .bottomLeft: k(kVK_ANSI_J), .bottomRight: k(kVK_ANSI_K),
+        .firstThird: k(kVK_ANSI_D), .centerThird: k(kVK_ANSI_F), .lastThird: k(kVK_ANSI_G),
+        .firstTwoThirds: k(kVK_ANSI_E), .centerTwoThirds: k(kVK_ANSI_R), .lastTwoThirds: k(kVK_ANSI_T),
+        .sixth1: k(kVK_ANSI_1), .sixth2: k(kVK_ANSI_2), .sixth3: k(kVK_ANSI_3),
+        .sixth4: k(kVK_ANSI_4), .sixth5: k(kVK_ANSI_5), .sixth6: k(kVK_ANSI_6),
+        .maximize: k(kVK_Return), .center: k(kVK_ANSI_C), .restore: k(kVK_Delete),
+        .nextDisplay: k(kVK_RightArrow, coc), .previousDisplay: k(kVK_LeftArrow, coc),
     ]
 }()
 
@@ -59,24 +29,32 @@ private let menuGroups: [[SnapAction]] = [
     [.nextDisplay, .previousDisplay],
 ]
 
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, SettingsHost {
+    let shortcuts = ShortcutStore(defaults: defaultShortcuts)
+    private(set) var unavailableShortcuts: Set<SnapAction> = []
+
     private let windows = WindowManager()
     private let hotKeys = HotKeys()
     private lazy var drag = DragSnapper(windows: windows, layout: currentLayout())
     private var statusItem: NSStatusItem!
+    private var actionItems: [SnapAction: NSMenuItem] = [:]
+    private var settings: SettingsWindowController?
     private var trustTimer: Timer?
-    private var failedShortcuts: [SnapAction] = []
 
     private let dragKey = "dragToSnap"
-    private var dragEnabled: Bool {
+    var dragEnabled: Bool {
         get { UserDefaults.standard.object(forKey: dragKey) as? Bool ?? true }
-        set { UserDefaults.standard.set(newValue, forKey: dragKey) }
+        set {
+            UserDefaults.standard.set(newValue, forKey: dragKey)
+            if newValue && AXIsProcessTrusted() { drag.start() } else { drag.stop() }
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AX.configure()
-        registerShortcuts()
+        buildMainMenu()
         buildStatusItem()
+        applyShortcuts()
 
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
                                                object: nil, queue: .main) { [weak self] _ in
@@ -98,29 +76,57 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    /// Opening the app again from Finder or Spotlight while it runs shows Settings.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        openSettings()
+        return false
+    }
+
     private func accessibilityGranted() {
         if dragEnabled { drag.start() }
+        settings?.refresh()
     }
 
     private func currentLayout() -> ScreenLayout {
         ScreenLayout(screens: NSScreen.screens.map { Screen(frame: $0.frame, visibleFrame: $0.visibleFrame) })
     }
 
-    private func registerShortcuts() {
-        for s in shortcuts {
-            let action = s.action
-            if !hotKeys.register(keyCode: s.keyCode, modifiers: s.modifiers, { [weak self] in self?.perform(action) }) {
-                failedShortcuts.append(action)
+    // MARK: Shortcuts
+
+    private func applyShortcuts() {
+        hotKeys.unregisterAll()
+        unavailableShortcuts = []
+        for action in SnapAction.allCases {
+            guard let combo = shortcuts.combo(for: action) else { continue }
+            let ok = hotKeys.register(keyCode: Int(combo.keyCode), modifiers: Int(combo.modifiers)) { [weak self] in
+                self?.perform(action)
             }
+            if !ok { unavailableShortcuts.insert(action) }
         }
-        if !failedShortcuts.isEmpty {
-            NSLog("Lodestone: shortcuts already in use by another app: %@", failedShortcuts.map(\.title).joined(separator: ", "))
+        for (action, item) in actionItems {
+            let combo = shortcuts.combo(for: action)
+            item.keyEquivalent = combo.flatMap { KeyNames.menuKeyEquivalent(Int($0.keyCode)) } ?? ""
+            item.keyEquivalentModifierMask = combo.map { KeyNames.modifierFlags($0.modifiers) } ?? []
+        }
+    }
+
+    func shortcutsChanged() {
+        applyShortcuts()
+        settings?.refresh()
+    }
+
+    func setShortcutsSuspended(_ suspended: Bool) {
+        if suspended {
+            hotKeys.unregisterAll()
+        } else {
+            shortcutsChanged()
         }
     }
 
     private func perform(_ action: SnapAction) {
         guard AXIsProcessTrusted() else {
-            promptForAccessibility()
+            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+            _ = AXIsProcessTrustedWithOptions(options)
             return
         }
         guard let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier else { return }
@@ -132,47 +138,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // MARK: Menu
 
+    /// Never shown (the app has no Dock icon or menu bar menus), but supplies ⌘W, ⌘Q and the editing
+    /// shortcuts while the Settings window is focused.
+    private func buildMainMenu() {
+        let appMenu = NSMenu()
+        appMenu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
+        appMenu.addItem(withTitle: "Quit Lodestone", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let windowMenu = NSMenu(title: "Window")
+        windowMenu.addItem(withTitle: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        let main = NSMenu()
+        for (title, submenu) in [("Lodestone", appMenu), ("Window", windowMenu)] {
+            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            item.submenu = submenu
+            main.addItem(item)
+        }
+        NSApp.mainMenu = main
+    }
+
     private func buildStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        let image = NSImage(systemSymbolName: "rectangle.split.2x2", accessibilityDescription: "Lodestone")
+        let image = NSImage(named: "MenuBarIcon")
+            ?? NSImage(systemSymbolName: "rectangle.split.2x2", accessibilityDescription: "Lodestone")
         image?.isTemplate = true
+        image?.accessibilityDescription = "Lodestone"
         statusItem.button?.image = image
 
         let menu = NSMenu()
         menu.delegate = self
         menu.autoenablesItems = false
-        let byAction = Dictionary(shortcuts.map { ($0.action, $0) }, uniquingKeysWith: { a, _ in a })
         for (i, group) in menuGroups.enumerated() {
             if i > 0 { menu.addItem(.separator()) }
             for action in group {
-                let item = NSMenuItem(title: action.title, action: #selector(menuAction(_:)), keyEquivalent: byAction[action]?.key ?? "")
-                item.keyEquivalentModifierMask = byAction[action]?.flags ?? []
+                let item = NSMenuItem(title: action.title, action: #selector(menuAction(_:)), keyEquivalent: "")
                 item.representedObject = action.rawValue
                 item.target = self
+                actionItems[action] = item
                 menu.addItem(item)
             }
         }
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Snap by Dragging to Screen Edges", action: #selector(toggleDrag(_:)), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "Launch at Login", action: #selector(toggleLogin(_:)), keyEquivalent: "").target = self
         menu.addItem(withTitle: "Grant Accessibility Access…", action: #selector(openAccessibility), keyEquivalent: "").target = self
-        menu.addItem(.separator())
+        menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
         menu.addItem(withTitle: "Quit Lodestone", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         let trusted = AXIsProcessTrusted()
-        for item in menu.items {
-            switch item.action {
-            case #selector(toggleDrag(_:)): item.state = dragEnabled ? .on : .off
-            case #selector(toggleLogin(_:)): item.state = SMAppService.mainApp.status == .enabled ? .on : .off
-            case #selector(openAccessibility): item.isHidden = trusted
-            case #selector(menuAction(_:)):
-                let failed = (item.representedObject as? String).flatMap(SnapAction.init(rawValue:)).map(failedShortcuts.contains) ?? false
-                item.toolTip = failed ? "This shortcut is taken by another app (is Magnet still running?)" : nil
-            default: break
-            }
+        for item in menu.items where item.action == #selector(openAccessibility) {
+            item.isHidden = trusted
         }
     }
 
@@ -181,27 +195,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         perform(action)
     }
 
-    @objc private func toggleDrag(_ sender: NSMenuItem) {
-        dragEnabled.toggle()
-        if dragEnabled && AXIsProcessTrusted() { drag.start() } else { drag.stop() }
-    }
-
-    @objc private func toggleLogin(_ sender: NSMenuItem) {
-        let service = SMAppService.mainApp
-        do {
-            if service.status == .enabled { try service.unregister() } else { try service.register() }
-        } catch {
-            NSLog("Lodestone: launch at login failed: %@", error.localizedDescription)
-        }
+    @objc private func openSettings() {
+        if settings == nil { settings = SettingsWindowController(host: self) }
+        settings?.show()
     }
 
     @objc private func openAccessibility() {
-        promptForAccessibility()
-        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
-    }
-
-    private func promptForAccessibility() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
 }

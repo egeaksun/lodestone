@@ -10,10 +10,10 @@ public enum SnapAction: String, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .leftHalf: "Left"
-        case .rightHalf: "Right"
-        case .topHalf: "Top"
-        case .bottomHalf: "Bottom"
+        case .leftHalf: "Left Half"
+        case .rightHalf: "Right Half"
+        case .topHalf: "Top Half"
+        case .bottomHalf: "Bottom Half"
         case .topLeft: "Top Left"
         case .topRight: "Top Right"
         case .bottomLeft: "Bottom Left"

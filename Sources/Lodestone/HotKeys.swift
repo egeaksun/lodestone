@@ -20,6 +20,12 @@ final class HotKeys {
         }, 1, &spec, Unmanaged.passUnretained(self).toOpaque(), nil)
     }
 
+    func unregisterAll() {
+        for ref in refs { UnregisterEventHotKey(ref) }
+        refs.removeAll()
+        handlers.removeAll()
+    }
+
     /// Returns false if the combination is already taken (for example, Magnet is still running).
     @discardableResult
     func register(keyCode: Int, modifiers: Int, _ handler: @escaping () -> Void) -> Bool {
