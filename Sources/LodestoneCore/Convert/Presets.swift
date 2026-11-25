@@ -169,18 +169,21 @@ public enum BuiltInPresets {
     ]
 
     public static let audio: [Preset] = [
-        Preset(id: "audio-high", name: "High (AAC 256 / MP3 V0)", kind: .audio, summary: "Transparent lossy quality.",
+        Preset(id: "audio-high", name: "High (256 kbps)", kind: .audio, summary: "AAC 256 kbps, MP3 V0, Opus 192 kbps: transparent.",
                options: ConvertOptions(quality: 90), builtIn: true),
-        Preset(id: "audio-standard", name: "Standard (AAC 192 / MP3 V2)", kind: .audio, summary: "Good quality, moderate size.",
+        Preset(id: "audio-standard", name: "Standard (192 kbps)", kind: .audio, summary: "AAC 192 kbps, MP3 V2, Opus 128 kbps: good quality, moderate size.",
                options: ConvertOptions(quality: 70), builtIn: true),
-        Preset(id: "audio-small", name: "Small (AAC 128 / MP3 V5)", kind: .audio, summary: "Speech and previews.",
+        Preset(id: "audio-small", name: "Small (128 kbps)", kind: .audio, summary: "AAC 128 kbps, MP3 V5, Opus 96 kbps: speech and previews.",
                options: ConvertOptions(quality: 45), builtIn: true),
-        Preset(id: "cd-quality", name: "CD quality (16-bit / 44.1 kHz)", kind: .audio,
+        Preset(id: "lossless", name: "Lossless (original)", kind: .audio,
+               summary: "Keeps the original sample rate and bit depth in WAV, AIFF, FLAC or ALAC. AAC 192 kbps for lossy formats.",
+               options: ConvertOptions(), builtIn: true),
+        Preset(id: "cd-quality", name: "CD quality (16-bit/44.1)", kind: .audio,
                summary: "Lossless formats at 16-bit / 44.1 kHz, dithered when reducing bit depth.",
                options: ConvertOptions(quality: 90, sampleRate: 44100, bitDepth: .int16), builtIn: true),
-        Preset(id: "studio-24-48", name: "Studio (24-bit / 48 kHz)", kind: .audio, summary: "Lossless formats at 24-bit / 48 kHz.",
+        Preset(id: "studio-24-48", name: "Studio (24-bit/48)", kind: .audio, summary: "Lossless formats at 24-bit / 48 kHz.",
                options: ConvertOptions(quality: 90, sampleRate: 48000, bitDepth: .int24), builtIn: true),
-        Preset(id: "hires-24-96", name: "Hi-res (24-bit / 96 kHz)", kind: .audio, summary: "Lossless formats at 24-bit / 96 kHz.",
+        Preset(id: "hires-24-96", name: "Hi-res (24-bit/96)", kind: .audio, summary: "Lossless formats at 24-bit / 96 kHz.",
                options: ConvertOptions(quality: 90, sampleRate: 96000, bitDepth: .int24), builtIn: true),
     ]
 
@@ -192,6 +195,17 @@ public enum BuiltInPresets {
         case .video: "balanced"
         case .audio: "audio-standard"
         }
+    }
+
+    /// The default preset for converting to `format`: lossless audio formats default to "lossless".
+    public static func defaultID(for kind: MediaKind, format: OutputFormat?) -> String {
+        kind == .audio && format?.isLosslessAudio == true ? "lossless" : defaultID(for: kind)
+    }
+
+    /// Whether a preset makes sense for a format. The bitrate-only audio presets don't for lossless formats.
+    public static func suits(_ preset: Preset, format: OutputFormat?) -> Bool {
+        guard preset.builtIn, format?.isLosslessAudio == true else { return true }
+        return !["audio-high", "audio-standard", "audio-small"].contains(preset.id)
     }
 
     public static func defaultPreset(for kind: MediaKind) -> Preset {

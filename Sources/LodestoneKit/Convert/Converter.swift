@@ -113,6 +113,21 @@ public struct ConvertResult: Codable, Sendable {
     public var bytesOut: Int64
     public var seconds: Double
     public var warnings: [String]
+
+    public init(input: String, output: String, kind: MediaKind, format: OutputFormat, preset: String, engine: ConvertEngine,
+                remux: Bool, bytesIn: Int64, bytesOut: Int64, seconds: Double, warnings: [String]) {
+        self.input = input
+        self.output = output
+        self.kind = kind
+        self.format = format
+        self.preset = preset
+        self.engine = engine
+        self.remux = remux
+        self.bytesIn = bytesIn
+        self.bytesOut = bytesOut
+        self.seconds = seconds
+        self.warnings = warnings
+    }
 }
 
 /// A file that couldn't be planned or converted.
@@ -187,7 +202,7 @@ public final class Converter: Sendable {
             let options = OutputFormat.targets(for: probed.kind).map(\.rawValue).joined(separator: ", ")
             throw IPCError("unsupported", "Can't convert \(probed.kind.rawValue) to \(format.title). \(probed.kind.title) converts to: \(options).")
         }
-        let chosen = preset ?? BuiltInPresets.defaultPreset(for: route.presetKind)
+        let chosen = preset ?? presets.find(BuiltInPresets.defaultID(for: route.presetKind, format: format)) ?? BuiltInPresets.defaultPreset(for: route.presetKind)
         guard chosen.kind == route.presetKind else {
             throw IPCError.invalidParams("Preset '\(chosen.name)' is for \(chosen.kind.rawValue); \(input.lastPathComponent) → \(format.title) needs a \(route.presetKind.rawValue) preset.")
         }
@@ -445,6 +460,7 @@ public final class Converter: Sendable {
     // MARK: Helpers
 
     /// Moves converted originals to the Trash (the "trash originals" setting and `--trash-originals`).
+    @discardableResult
     public static func trashOriginals(_ results: [ConvertResult]) -> [String] {
         var trashed: [String] = []
         for r in results where r.input != r.output {

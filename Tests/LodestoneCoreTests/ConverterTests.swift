@@ -117,6 +117,11 @@ final class ConverterModelTests: XCTestCase {
         XCTAssertEqual(Set(BuiltInPresets.all.map(\.id)).count, BuiltInPresets.all.count, "ids are unique")
         for kind in MediaKind.allCases { XCTAssertEqual(BuiltInPresets.defaultPreset(for: kind).kind, kind) }
         XCTAssertEqual(Preset.slug("My YouTube  Preset!"), "my-youtube-preset")
+        XCTAssertEqual(BuiltInPresets.defaultID(for: .audio, format: .flac), "lossless")
+        XCTAssertEqual(BuiltInPresets.defaultID(for: .audio, format: .mp3), "audio-standard")
+        let standard = BuiltInPresets.find("audio-standard", in: BuiltInPresets.all)!
+        XCTAssertFalse(BuiltInPresets.suits(standard, format: .wav), "a bitrate preset means nothing for WAV")
+        XCTAssertTrue(BuiltInPresets.suits(standard, format: .m4a))
 
         let data = try! JSONEncoder().encode(BuiltInPresets.all)
         XCTAssertEqual(try JSONDecoder().decode([Preset].self, from: data), BuiltInPresets.all)
