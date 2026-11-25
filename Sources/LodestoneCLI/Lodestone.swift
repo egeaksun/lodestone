@@ -17,6 +17,7 @@ struct LodestoneCommand: AsyncParsableCommand {
         subcommands: [
             Status.self,
             WindowGroup.self,
+            ClipboardGroup.self,
             CommandsGroup.self,
             Run.self,
             ShortcutsGroup.self,
