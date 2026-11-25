@@ -3,7 +3,8 @@ import CoreGraphics
 public enum SnapAction: String, CaseIterable, Sendable {
     case leftHalf, rightHalf, topHalf, bottomHalf
     case topLeft, topRight, bottomLeft, bottomRight
-    case firstThird, centerThird, lastThird, firstTwoThirds, lastTwoThirds
+    case firstThird, centerThird, lastThird, firstTwoThirds, centerTwoThirds, lastTwoThirds
+    case sixth1, sixth2, sixth3, sixth4, sixth5, sixth6
     case maximize, center, restore
     case nextDisplay, previousDisplay
 
@@ -21,7 +22,14 @@ public enum SnapAction: String, CaseIterable, Sendable {
         case .centerThird: "Center Third"
         case .lastThird: "Right Third"
         case .firstTwoThirds: "Left Two Thirds"
+        case .centerTwoThirds: "Center Two Thirds"
         case .lastTwoThirds: "Right Two Thirds"
+        case .sixth1: "1/6"
+        case .sixth2: "2/6"
+        case .sixth3: "3/6"
+        case .sixth4: "4/6"
+        case .sixth5: "5/6"
+        case .sixth6: "6/6"
         case .maximize: "Maximize"
         case .center: "Center"
         case .restore: "Restore"
@@ -31,12 +39,12 @@ public enum SnapAction: String, CaseIterable, Sendable {
     }
 
     /// Target frame inside `visible` (Cocoa coordinates). Nil for actions that do not target a fixed region.
-    /// Thirds run left-to-right on landscape screens and top-to-bottom on portrait screens.
+    /// Thirds and sixths run left-to-right on landscape screens and top-to-bottom on portrait screens.
     public func frame(in v: CGRect, window: CGRect) -> CGRect? {
         let landscape = v.width >= v.height
-        func thirds(_ a: Int, _ b: Int) -> CGRect {
-            landscape ? cell(v, cols: a, b, of: 3, rows: 0, 1, of: 1)
-                : cell(v, cols: 0, 1, of: 1, rows: a, b, of: 3)
+        func strip(_ a: Int, _ b: Int, of n: Int) -> CGRect {
+            landscape ? cell(v, cols: a, b, of: n, rows: 0, 1, of: 1)
+                : cell(v, cols: 0, 1, of: 1, rows: a, b, of: n)
         }
         switch self {
         case .leftHalf: return cell(v, cols: 0, 1, of: 2, rows: 0, 1, of: 1)
@@ -47,11 +55,18 @@ public enum SnapAction: String, CaseIterable, Sendable {
         case .topRight: return cell(v, cols: 1, 2, of: 2, rows: 0, 1, of: 2)
         case .bottomLeft: return cell(v, cols: 0, 1, of: 2, rows: 1, 2, of: 2)
         case .bottomRight: return cell(v, cols: 1, 2, of: 2, rows: 1, 2, of: 2)
-        case .firstThird: return thirds(0, 1)
-        case .centerThird: return thirds(1, 2)
-        case .lastThird: return thirds(2, 3)
-        case .firstTwoThirds: return thirds(0, 2)
-        case .lastTwoThirds: return thirds(1, 3)
+        case .firstThird: return strip(0, 1, of: 3)
+        case .centerThird: return strip(1, 2, of: 3)
+        case .lastThird: return strip(2, 3, of: 3)
+        case .firstTwoThirds: return strip(0, 2, of: 3)
+        case .centerTwoThirds: return strip(1, 5, of: 6)
+        case .lastTwoThirds: return strip(1, 3, of: 3)
+        case .sixth1: return strip(0, 1, of: 6)
+        case .sixth2: return strip(1, 2, of: 6)
+        case .sixth3: return strip(2, 3, of: 6)
+        case .sixth4: return strip(3, 4, of: 6)
+        case .sixth5: return strip(4, 5, of: 6)
+        case .sixth6: return strip(5, 6, of: 6)
         case .maximize: return v
         case .center:
             let w = min(window.width, v.width)

@@ -17,14 +17,15 @@ has to be removed and re-added after `make install`. To avoid that, sign with a 
 
 ## Shortcuts
 
-The same as Magnet's defaults.
+Taken from the Magnet configuration this replaces (Magnet's defaults plus sixths).
 
 | Action | Keys |
 | --- | --- |
+| 1/6 … 6/6 (six columns, left to right) | ⌃⌥ 1 2 3 4 5 6 |
 | Left / Right / Top / Bottom half | ⌃⌥ ← → ↑ ↓ |
 | Top left / Top right / Bottom left / Bottom right | ⌃⌥ U I J K |
 | Left / Center / Right third | ⌃⌥ D F G |
-| Left / Right two thirds | ⌃⌥ E T |
+| Left / Center / Right two thirds | ⌃⌥ E R T |
 | Maximize | ⌃⌥ ↩ |
 | Center | ⌃⌥ C |
 | Restore | ⌃⌥ ⌫ |
@@ -32,12 +33,17 @@ The same as Magnet's defaults.
 
 ## Drag to snap
 
-Drag a window by its title bar to:
+Drag a window by its title bar to a screen edge. The zones follow Magnet's default layout: the screen
+is a 24 × 12 grid, and the cell along the edge the cursor touches picks the action.
 
-- the left or right edge for a half
-- a corner for a quarter
-- the top edge for maximize
-- the bottom edge for a third (left, center or right, by cursor position)
+- Corners (one cell each): quarters
+- Top edge: maximize
+- Left / right edge: top half (upper quarter of the edge), left / right half (middle), bottom half
+  (lower quarter)
+- Bottom edge, left to right: left third, left two thirds, center third, right two thirds, right third
+
+Portrait screens use a 12 × 24 grid: the side edges stack top half, thirds, two-thirds and bottom half,
+and the bottom edge splits into left and right halves.
 
 A snapped window that is dragged away goes back to its previous size.
 

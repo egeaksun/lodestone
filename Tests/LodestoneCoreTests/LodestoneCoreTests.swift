@@ -54,6 +54,24 @@ final class SnapActionTests: XCTestCase {
         XCTAssertEqual(first.height, 640)
     }
 
+    func testSixthsTileLeftToRight() {
+        let sixths: [SnapAction] = [.sixth1, .sixth2, .sixth3, .sixth4, .sixth5, .sixth6]
+        let frames = sixths.map { $0.frame(in: v, window: window)! }
+        XCTAssertEqual(frames.first!.minX, v.minX)
+        XCTAssertEqual(frames.last!.maxX, v.maxX)
+        for (a, b) in zip(frames, frames.dropFirst()) { XCTAssertEqual(a.maxX, b.minX) }
+        for r in frames {
+            XCTAssertEqual(r.width, 252)
+            XCTAssertEqual(r.height, v.height)
+        }
+    }
+
+    func testCenterTwoThirds() {
+        let r = SnapAction.centerTwoThirds.frame(in: v, window: window)!
+        XCTAssertEqual(r.minX, 252)
+        XCTAssertEqual(r.maxX, 1260)
+    }
+
     func testCenterKeepsSizeAndClamps() {
         let c = SnapAction.center.frame(in: v, window: window)!
         XCTAssertEqual(c.size, window.size)
@@ -69,6 +87,7 @@ final class SnapActionTests: XCTestCase {
 }
 
 final class SnapZonesTests: XCTestCase {
+    // 24 columns of 63pt, 12 rows of ~81.8pt.
     let f = CGRect(x: 0, y: 0, width: 1512, height: 982)
 
     func testInteriorHasNoZone() {
@@ -76,24 +95,33 @@ final class SnapZonesTests: XCTestCase {
         XCTAssertNil(SnapZones.action(at: CGPoint(x: 7, y: 500), in: f))
     }
 
-    func testEdges() {
+    func testSideEdges() {
         XCTAssertEqual(SnapZones.action(at: CGPoint(x: 0, y: 500), in: f), .leftHalf)
         XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1512, y: 500), in: f), .rightHalf)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 0, y: 850), in: f), .topHalf)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1512, y: 850), in: f), .topHalf)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 0, y: 120), in: f), .bottomHalf)
+    }
+
+    func testTopEdgeIsMaximizeBetweenCorners() {
         XCTAssertEqual(SnapZones.action(at: CGPoint(x: 756, y: 982), in: f), .maximize)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 100, y: 980), in: f), .maximize)
     }
 
-    func testCorners() {
+    func testCornersAreOneCell() {
         XCTAssertEqual(SnapZones.action(at: CGPoint(x: 0, y: 982), in: f), .topLeft)
-        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 100, y: 980), in: f), .topLeft)
-        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1511, y: 900), in: f), .topRight)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 40, y: 980), in: f), .topLeft)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1511, y: 950), in: f), .topRight)
         XCTAssertEqual(SnapZones.action(at: CGPoint(x: 2, y: 3), in: f), .bottomLeft)
-        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1450, y: 0), in: f), .bottomRight)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1480, y: 0), in: f), .bottomRight)
     }
 
-    func testBottomEdgeThirds() {
-        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 400, y: 0), in: f), .firstThird)
+    func testBottomEdgeThirdsAndTwoThirds() {
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 300, y: 0), in: f), .firstThird)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 500, y: 0), in: f), .firstTwoThirds)
         XCTAssertEqual(SnapZones.action(at: CGPoint(x: 756, y: 0), in: f), .centerThird)
-        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1100, y: 0), in: f), .lastThird)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1000, y: 0), in: f), .lastTwoThirds)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1200, y: 0), in: f), .lastThird)
     }
 
     func testZonesOnSecondaryScreen() {
@@ -102,9 +130,13 @@ final class SnapZonesTests: XCTestCase {
         XCTAssertEqual(SnapZones.action(at: CGPoint(x: 2800, y: 1240), in: right), .maximize)
     }
 
-    func testPortraitBottomIsBottomHalf() {
-        let p = CGRect(x: 0, y: 0, width: 1080, height: 1920)
-        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 540, y: 0), in: p), .bottomHalf)
+    func testPortrait() {
+        let p = CGRect(x: 0, y: 0, width: 1080, height: 1920) // 12 columns of 90pt, 24 rows of 80pt
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 300, y: 0), in: p), .leftHalf)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 800, y: 0), in: p), .rightHalf)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 0, y: 1920 - 80 * 6.5), in: p), .firstThird)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 1080, y: 960), in: p), .centerThird)
+        XCTAssertEqual(SnapZones.action(at: CGPoint(x: 0, y: 1920 - 80 * 20.5), in: p), .bottomHalf)
     }
 }
 

@@ -14,7 +14,7 @@ private struct Shortcut {
 
 private func arrow(_ c: Int) -> String { String(UnicodeScalar(UInt16(c)).map(Character.init) ?? " ") }
 
-/// Magnet's default bindings, so muscle memory carries over.
+/// The bindings from your Magnet setup (com.crowdcafe.windowmagnet): its defaults plus ⌃⌥1–6 for sixths.
 private let shortcuts: [Shortcut] = {
     let co = controlKey | optionKey
     let coc = co | cmdKey
@@ -33,7 +33,14 @@ private let shortcuts: [Shortcut] = {
         Shortcut(action: .centerThird, keyCode: kVK_ANSI_F, modifiers: co, key: "f", flags: f),
         Shortcut(action: .lastThird, keyCode: kVK_ANSI_G, modifiers: co, key: "g", flags: f),
         Shortcut(action: .firstTwoThirds, keyCode: kVK_ANSI_E, modifiers: co, key: "e", flags: f),
+        Shortcut(action: .centerTwoThirds, keyCode: kVK_ANSI_R, modifiers: co, key: "r", flags: f),
         Shortcut(action: .lastTwoThirds, keyCode: kVK_ANSI_T, modifiers: co, key: "t", flags: f),
+        Shortcut(action: .sixth1, keyCode: kVK_ANSI_1, modifiers: co, key: "1", flags: f),
+        Shortcut(action: .sixth2, keyCode: kVK_ANSI_2, modifiers: co, key: "2", flags: f),
+        Shortcut(action: .sixth3, keyCode: kVK_ANSI_3, modifiers: co, key: "3", flags: f),
+        Shortcut(action: .sixth4, keyCode: kVK_ANSI_4, modifiers: co, key: "4", flags: f),
+        Shortcut(action: .sixth5, keyCode: kVK_ANSI_5, modifiers: co, key: "5", flags: f),
+        Shortcut(action: .sixth6, keyCode: kVK_ANSI_6, modifiers: co, key: "6", flags: f),
         Shortcut(action: .maximize, keyCode: kVK_Return, modifiers: co, key: "\r", flags: f),
         Shortcut(action: .center, keyCode: kVK_ANSI_C, modifiers: co, key: "c", flags: f),
         Shortcut(action: .restore, keyCode: kVK_Delete, modifiers: co, key: "\u{8}", flags: f),
@@ -42,11 +49,12 @@ private let shortcuts: [Shortcut] = {
     ]
 }()
 
-/// Menu groups: halves, quarters, thirds, then whole-window actions.
+/// Menu groups: sixths, halves, quarters, thirds, then whole-window actions.
 private let menuGroups: [[SnapAction]] = [
+    [.sixth1, .sixth2, .sixth3, .sixth4, .sixth5, .sixth6],
     [.leftHalf, .rightHalf, .topHalf, .bottomHalf],
     [.topLeft, .topRight, .bottomLeft, .bottomRight],
-    [.firstThird, .centerThird, .lastThird, .firstTwoThirds, .lastTwoThirds],
+    [.firstThird, .centerThird, .lastThird, .firstTwoThirds, .centerTwoThirds, .lastTwoThirds],
     [.maximize, .center, .restore],
     [.nextDisplay, .previousDisplay],
 ]
